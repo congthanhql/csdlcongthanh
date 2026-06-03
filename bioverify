@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>THAM GIA CHIẾN DỊCH SỐ HÓA THPT 2026 - 2027</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+background:#f1f5f9;
+padding:20px;
+}
+
+.container{
+max-width:1000px;
+margin:auto;
+}
+
+.card{
+background:#fff;
+padding:25px;
+border-radius:20px;
+box-shadow:0 10px 25px rgba(0,0,0,.08);
+margin-bottom:20px;
+}
+
+h1,h2{
+text-align:center;
+margin-bottom:15px;
+color:#0f172a;
+}
+
+.desc{
+text-align:center;
+line-height:1.8;
+color:#475569;
+margin-bottom:20px;
+}
+
+input,select{
+width:100%;
+padding:14px;
+border:1px solid #dbe2ea;
+border-radius:12px;
+margin-bottom:15px;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:14px;
+border:none;
+border-radius:12px;
+background:#2563eb;
+color:#fff;
+font-size:15px;
+cursor:pointer;
+font-weight:600;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.priceBox{
+display:none;
+text-align:center;
+margin-top:20px;
+padding:20px;
+border-radius:15px;
+background:#ecfeff;
+}
+
+.price{
+font-size:32px;
+font-weight:700;
+color:#dc2626;
+margin:10px 0;
+}
+
+.qr{
+width:260px;
+max-width:100%;
+margin-top:15px;
+}
+
+.adminPanel{
+display:none;
+}
+
+.logo{
+width:70px;
+height:70px;
+border-radius:50%;
+border:3px solid #2563eb;
+padding:5px;
+display:block;
+margin:auto auto 15px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+overflow:auto;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+font-size:14px;
+}
+
+th{
+background:#2563eb;
+color:#fff;
+}
+
+.badge{
+padding:5px 12px;
+border-radius:20px;
+color:#fff;
+font-size:12px;
+font-weight:600;
+}
+
+.success{
+background:#22c55e;
+}
+
+.pending{
+background:#ef4444;
+}
+
+.successBox{
+background:#dcfce7;
+padding:25px;
+border-radius:15px;
+}
+
+.successBox h2{
+color:#15803d;
+}
+
+@media(max-width:768px){
+table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<h1>THAM GIA CHIẾN DỊCH SỐ HÓA THPT 2026 - 2027</h1>
+
+<div class="desc">
+✅ Kho đề thi THPT<br>
+✅ Ôn luyện Azota<br>
+✅ Ôn luyện OLM<br>
+✅ Tài liệu học tập số hóa
+</div>
+
+<input id="name" placeholder="Họ và tên">
+
+<input id="phone" placeholder="Số điện thoại (Zalo)">
+
+<input id="gmail" placeholder="Địa chỉ Gmail">
+
+<input id="lop" placeholder="Học sinh lớp">
+
+<input id="coupon" placeholder="Mã giảm giá (nếu có)">
+
+<select id="school">
+<option value="">-- Chọn Trường --</option>
+<option value="27000">THPT Phạm Văn Đồng</option>
+<option value="32000">THPT Nguyễn Tất Thành</option>
+<option value="37000">THCS & THPT Hai Bà Trưng</option>
+</select>
+
+<button onclick="register()">ĐĂNG KÝ NGAY</button>
+
+<div class="priceBox" id="priceBox">
+
+<h3>Số tiền cần thanh toán</h3>
+
+<div class="price" id="price"></div>
+
+<img id="qr" class="qr">
+
+<p style="margin-top:15px">
+VCB<br>
+STK: 7876159680<br>
+Chủ TK: HUỲNH CÔNG THÀNH
+</p>
+
+<p id="payStatus" style="margin-top:15px;font-weight:600;color:#ef4444">
+⏳ Chờ xác nhận thanh toán...
+</p>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<img
+class="logo"
+src="https://www.congthanh.io.vn/favicon.ico"
+onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+
+<h2>Đăng nhập Admin</h2>
+
+<input id="adminUser" placeholder="Tài khoản">
+
+<input id="adminPass" type="password" placeholder="Mật khẩu">
+
+<button onclick="loginAdmin()">Đăng nhập</button>
+
+</div>
+
+<div class="card adminPanel" id="adminPanel">
+
+<h2>Danh sách đăng ký</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>STT</th>
+<th>Họ Tên</th>
+<th>SĐT</th>
+<th>Gmail</th>
+<th>Lớp</th>
+<th>Trường</th>
+<th>Số Tiền</th>
+<th>Trạng Thái</th>
+<th>Thời Gian</th>
+<th>Thao Tác</th>
+</tr>
+</thead>
+
+<tbody id="dataTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+
+import {
+getDatabase,
+ref,
+push,
+onValue,
+update
+}
+from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+const firebaseConfig = {
+
+apiKey:"AIzaSyDtAU-Iqn-u39_mgkxRZ3fIF_Kyxqn-Gyg",
+authDomain:"csdl-bio.firebaseapp.com",
+databaseURL:"https://csdl-bio-default-rtdb.firebaseio.com",
+projectId:"csdl-bio",
+storageBucket:"csdl-bio.firebasestorage.app",
+messagingSenderId:"568258817515",
+appId:"1:568258817515:web:77070bdcfc1e421ca63dae"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.register = function(){
+
+const name =
+document.getElementById('name').value.trim();
+
+const phone =
+document.getElementById('phone').value.trim();
+
+const gmail =
+document.getElementById('gmail').value.trim();
+
+const lop =
+document.getElementById('lop').value.trim();
+
+const coupon =
+document.getElementById('coupon').value.trim();
+
+const schoolSelect =
+document.getElementById('school');
+
+const amount =
+Number(schoolSelect.value);
+
+if(!name || !phone || !gmail || !lop || !amount){
+
+alert("Vui lòng nhập đầy đủ thông tin");
+return;
+
+}
+
+if(!gmail.endsWith("@gmail.com")){
+
+alert("Gmail không hợp lệ");
+return;
+
+}
+
+let finalAmount = amount;
+
+if(coupon === "bioverify@edu.com"){
+
+finalAmount = Math.round(amount * 0.2);
+
+}
+
+const data = {
+
+name,
+phone,
+gmail,
+lop,
+
+school:
+schoolSelect.options[
+schoolSelect.selectedIndex
+].text,
+
+amount:finalAmount,
+
+status:"Chưa thanh toán",
+
+time:new Date().toLocaleString("vi-VN")
+
+};
+
+const newRef =
+push(ref(db,"THPT2026"),data);
+
+document.getElementById('priceBox').style.display='block';
+
+document.getElementById('price').innerHTML =
+finalAmount.toLocaleString('vi-VN')+" VNĐ";
+
+document.getElementById('qr').src =
+`https://img.vietqr.io/image/VCB-7876159680-compact.png?amount=${finalAmount}&addInfo=THPT2026_${phone}&accountName=HUYNH%20CONG%20THANH`;
+
+onValue(newRef,(snap)=>{
+
+const d = snap.val();
+
+if(d && d.status==="Đã thanh toán"){
+
+document.getElementById('priceBox').innerHTML=`
+<div class="successBox">
+<h2>✅ THANH TOÁN THÀNH CÔNG</h2>
+<p>Hệ thống đã xác nhận giao dịch.</p>
+</div>
+`;
+
+}
+
+});
+
+alert("Đăng ký thành công");
+
+}
+
+window.loginAdmin=function(){
+
+const user =
+document.getElementById('adminUser').value;
+
+const pass =
+document.getElementById('adminPass').value;
+
+if(
+user==="congthanh.admin" &&
+pass==="Thanh123@"
+){
+
+document.getElementById('adminPanel').style.display='block';
+
+loadData();
+
+}else{
+
+alert("Sai tài khoản hoặc mật khẩu");
+
+}
+
+}
+
+window.confirmPay = function(id){
+
+update(
+ref(db,"THPT2026/"+id),
+{
+status:"Đã thanh toán"
+}
+);
+
+}
+
+function loadData(){
+
+const tbody =
+document.getElementById('dataTable');
+
+onValue(ref(db,"THPT2026"),(snapshot)=>{
+
+tbody.innerHTML='';
+
+let stt = 1;
+
+snapshot.forEach(child=>{
+
+const d = child.val();
+
+tbody.innerHTML += `
+<tr>
+
+<td>${stt++}</td>
+<td>${d.name}</td>
+<td>${d.phone}</td>
+<td>${d.gmail}</td>
+<td>${d.lop}</td>
+<td>${d.school}</td>
+
+<td>
+${Number(d.amount).toLocaleString('vi-VN')}đ
+</td>
+
+<td>
+<span class="badge ${
+d.status==="Đã thanh toán"
+?'success'
+:'pending'
+}">
+${d.status}
+</span>
+</td>
+
+<td>${d.time}</td>
+
+<td>
+
+<button
+style="
+width:auto;
+padding:8px 12px;
+background:#22c55e;
+"
+onclick="confirmPay('${child.key}')">
+
+Đã Thanh Toán
+
+</button>
+
+</td>
+
+</tr>
+`;
+
+});
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
