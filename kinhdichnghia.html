@@ -1,1 +1,2178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kinh Dịch – Tra Cứu 64 Quẻ Dịch</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c8a96e;
+    --gold-light: #e8d09a;
+    --gold-dark: #8a6b35;
+    --ink: #0d0b07;
+    --paper: #f5efe3;
+    --paper-dark: #e8dcc8;
+    --red: #8b1a1a;
+    --green-old: #2a4a2a;
+    --text: #1a1208;
+    --muted: #6b5a3a;
+    --border: #c8a96e44;
+  }
 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Noto Serif', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, #1a0f0044 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, #0d1a0a44 0%, transparent 60%),
+      repeating-linear-gradient(45deg, transparent, transparent 2px, #ffffff04 2px, #ffffff04 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* === HEADER === */
+  .site-header {
+    position: relative;
+    background: linear-gradient(180deg, #1a1208 0%, #0d0b07 100%);
+    border-bottom: 2px solid var(--gold-dark);
+    padding: 2rem 1rem 1.5rem;
+    text-align: center;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .site-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .trigram-deco {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 0.8rem;
+    opacity: 0.6;
+    font-size: 1.8rem;
+    color: var(--gold-dark);
+  }
+
+  .site-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 30px #c8a96e55;
+    margin-bottom: 0.3rem;
+  }
+
+  .site-subtitle {
+    color: var(--gold-dark);
+    font-size: 0.85rem;
+    font-style: italic;
+    letter-spacing: 0.15em;
+  }
+
+  /* === MAIN LAYOUT === */
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+
+  /* === SEARCH BAR === */
+  .search-wrap {
+    background: linear-gradient(135deg, #1a1208, #111008);
+    border: 1px solid var(--gold-dark);
+    border-radius: 4px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1 1 240px;
+    display: flex;
+    align-items: center;
+    background: #0d0b07;
+    border: 1px solid var(--gold-dark);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .search-box svg {
+    padding: 0 0.7rem;
+    color: var(--gold-dark);
+    flex-shrink: 0;
+  }
+
+  .search-box input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--gold-light);
+    font-family: 'Noto Serif', serif;
+    font-size: 0.95rem;
+    padding: 0.65rem 0.5rem 0.65rem 0;
+  }
+
+  .search-box input::placeholder { color: var(--muted); }
+
+  .filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .filter-tab {
+    background: transparent;
+    border: 1px solid var(--gold-dark);
+    color: var(--muted);
+    font-family: 'Noto Serif', serif;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-tab:hover, .filter-tab.active {
+    background: var(--gold-dark);
+    color: var(--gold-light);
+    border-color: var(--gold);
+  }
+
+  .result-count {
+    color: var(--muted);
+    font-size: 0.8rem;
+    width: 100%;
+    padding-top: 0.2rem;
+  }
+  .result-count span { color: var(--gold); font-weight: 700; }
+
+  /* === GRID === */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+
+  /* === CARD === */
+  .card {
+    background: linear-gradient(160deg, #1c1508 0%, #100e06 100%);
+    border: 1px solid #c8a96e33;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover {
+    border-color: var(--gold-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px #00000066, 0 0 20px #c8a96e11;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-inner {
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .card-number {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.75rem;
+    color: var(--gold-dark);
+    background: #0d0b07;
+    border: 1px solid #c8a96e33;
+    border-radius: 2px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+
+  .card-glyph {
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--gold);
+    flex-shrink: 0;
+    margin-top: 2px;
+    text-shadow: 0 0 15px #c8a96e66;
+  }
+
+  .card-body { flex: 1; min-width: 0; }
+
+  .card-name-vi {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 0.15rem;
+  }
+
+  .card-name-cn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 0.8rem;
+    color: var(--gold-dark);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.05em;
+  }
+
+  .card-keyword {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-trigrams {
+    font-size: 0.7rem;
+    color: var(--gold-dark);
+    margin-top: 0.3rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  /* === MODAL === */
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: #0d0b07cc;
+    backdrop-filter: blur(6px);
+    z-index: 100;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-bg.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: linear-gradient(160deg, #1c1508 0%, #100e06 100%);
+    border: 1px solid var(--gold-dark);
+    border-radius: 6px;
+    width: 100%;
+    max-width: 720px;
+    margin: auto;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+    overflow: hidden;
+  }
+
+  .modal-bg.open .modal { transform: translateY(0); }
+
+  .modal-top-bar {
+    background: linear-gradient(90deg, #1a1208, #0d0b07);
+    border-bottom: 1px solid var(--gold-dark);
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .modal-glyph {
+    font-size: 3.5rem;
+    color: var(--gold);
+    text-shadow: 0 0 25px #c8a96e88;
+    line-height: 1;
+  }
+
+  .modal-heading { flex: 1; }
+
+  .modal-number {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.7rem;
+    color: var(--gold-dark);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.2rem;
+  }
+
+  .modal-name-vi {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 0.15rem;
+  }
+
+  .modal-name-cn {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 1rem;
+    color: var(--gold-dark);
+  }
+
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold-dark);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { background: var(--gold-dark); color: var(--gold-light); }
+
+  .modal-body { padding: 1.5rem; }
+
+  .modal-section {
+    margin-bottom: 1.4rem;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid #c8a96e22;
+  }
+  .modal-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+  .section-label {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 0.65rem;
+    color: var(--gold-dark);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold-dark), transparent);
+  }
+
+  .modal-text {
+    font-size: 0.9rem;
+    color: #c8b896;
+    line-height: 1.8;
+  }
+
+  .taga-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.8rem;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+  .tag-good { border-color: #2a5a2a; color: #7ec87e; background: #0a1a0a; }
+  .tag-bad { border-color: #5a1a1a; color: #c87e7e; background: #1a0a0a; }
+  .tag-neutral { border-color: var(--gold-dark); color: var(--gold-dark); background: transparent; }
+
+  .trigram-display {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .trigram-item {
+    text-align: center;
+  }
+
+  .trigram-symbol {
+    font-size: 2.2rem;
+    color: var(--gold);
+    display: block;
+    text-shadow: 0 0 15px #c8a96e44;
+  }
+
+  .trigram-name {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.2rem;
+  }
+
+  .lines-grid {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .hao-item {
+    background: #0d0b07;
+    border: 1px solid #c8a96e22;
+    border-radius: 3px;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .hao-label {
+    font-size: 0.7rem;
+    color: var(--gold-dark);
+    font-family: 'Cinzel Decorative', serif;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+
+  .hao-text {
+    font-size: 0.82rem;
+    color: #b09878;
+    line-height: 1.65;
+  }
+
+  /* === NAV PREV NEXT === */
+  .modal-nav {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    padding: 0.8rem 1.5rem;
+    border-top: 1px solid #c8a96e22;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: 1px solid var(--gold-dark);
+    color: var(--gold-dark);
+    font-family: 'Noto Serif', serif;
+    font-size: 0.8rem;
+    padding: 0.4rem 1rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--gold-dark); color: var(--gold-light); }
+
+  /* === CATEGORIES === */
+  .cat-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .cat-badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.9rem;
+    border: 1px solid #c8a96e44;
+    border-radius: 3px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #1a1208;
+  }
+  .cat-badge:hover, .cat-badge.active {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: #2a1f0a;
+  }
+
+  /* scroll */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #0d0b07; }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .modal-glyph { font-size: 2.5rem; }
+    .modal-name-vi { font-size: 1.2rem; }
+  }
+
+  /* Topic tags on image */
+  .topic-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+  .topic-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    background: #0d0b07;
+    border: 1px solid #c8a96e33;
+    border-radius: 20px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="trigram-deco">☰ ☷ ☳ ☴ ☵ ☶ ☲ ☱</div>
+  <h1 class="site-title">Kinh Dịch – 64 Quẻ Dịch</h1>
+  <p class="site-subtitle">Tra cứu đầy đủ · Tình cảm · Sức khoẻ · Tài lộc · Công danh · Hôn nhân</p>
+</header>
+
+<div class="app">
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Tìm theo tên quẻ, số thứ tự, từ khoá..." autocomplete="off">
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-filter="all">Tất cả</button>
+      <button class="filter-tab" data-filter="good">Quẻ tốt ▲</button>
+      <button class="filter-tab" data-filter="bad">Quẻ xấu ▼</button>
+      <button class="filter-tab" data-filter="mixed">Trung hoà ◆</button>
+    </div>
+    <div class="result-count">Hiển thị <span id="countSpan">64</span> / 64 quẻ</div>
+  </div>
+
+  <!-- Category topics -->
+  <div class="cat-badges" id="catBadges">
+    <button class="cat-badge active" data-cat="all">Xem tất cả chủ đề</button>
+    <button class="cat-badge" data-cat="tinhcam">Tình cảm</button>
+    <button class="cat-badge" data-cat="suckhoe">Sức khoẻ</button>
+    <button class="cat-badge" data-cat="tailoc">Tài lộc</button>
+    <button class="cat-badge" data-cat="congdanh">Công danh</button>
+    <button class="cat-badge" data-cat="honnhan">Hôn nhân</button>
+    <button class="cat-badge" data-cat="giacanh">Gia cảnh</button>
+    <button class="cat-badge" data-cat="congviec">Công việc</button>
+  </div>
+
+  <div class="grid" id="queGrid"></div>
+</div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modalBg" onclick="handleModalBgClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-top-bar">
+      <div class="modal-glyph" id="mGlyph">䷀</div>
+      <div class="modal-heading">
+        <div class="modal-number" id="mNum">QUẺ SỐ 01</div>
+        <div class="modal-name-vi" id="mNameVi">Thuần Càn</div>
+        <div class="modal-name-cn" id="mNameCn">乾為天 · Heaven</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+    <div class="modal-nav">
+      <button class="nav-btn" id="btnPrev" onclick="navModal(-1)">◀ Quẻ trước</button>
+      <button class="nav-btn" id="btnNext" onclick="navModal(1)">Quẻ sau ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DATA: 64 QUẺ DỊCH – Full dataset
+// ================================================================
+const QUE_DATA = [
+  {
+    so: 1, glyph: "䷀", vi: "Thuần Càn", cn: "乾為天", en: "The Creative",
+    thuong: "Càn (☰) Trời", ha: "Càn (☰) Trời",
+    kw: "Dương cực thịnh · Sáng tạo · Mạnh mẽ · Tiến lên",
+    quality: "good",
+    image: `Quẻ Thuần Càn gồm 6 hào dương liên tiếp, tượng trưng cho trời thuần khiết, sức mạnh sáng tạo không ngừng. 
+Đây là quẻ dương cực thịnh, biểu trưng cho người quân tử có đức, đứng đầu trời đất.
+Ý nghĩa: Mọi việc đang trong giai đoạn phát triển mạnh mẽ nhất, cần giữ đức hạnh để bền vững.`,
+    tinhcam: "Tình cảm sáng sủa, người nam chủ động, mạnh mẽ quyết đoán. Dễ thành công nếu thực tâm. Tuy nhiên quá dương có thể kiêu ngạo, cần khiêm tốn.",
+    suckhoe: "Sức khoẻ tốt, năng lượng dồi dào. Chú ý đừng quá sức, tránh nóng giận. Bệnh nếu có sẽ mau hồi phục.",
+    tailoc: "Tài lộc hưng vượng, công việc kinh doanh thuận lợi. Đây là thời điểm vàng để đầu tư, mở rộng.",
+    congdanh: "Sự nghiệp thăng tiến, công danh rực rỡ. Người lãnh đạo được quẻ này rất tốt. Cần giữ đức để lâu dài.",
+    honnhan: "Hôn nhân tốt đẹp, người nam mạnh mẽ lo cho gia đình. Song cần biết nhường nhịn để hài hoà.",
+    giacanh: "Gia đình hưng thịnh, chủ nhà mạnh khoẻ, tài sản phát triển.",
+    congviec: "Công việc suôn sẻ, dễ thăng tiến, phù hợp lãnh đạo hay khởi nghiệp.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Rồng ẩn mình, chưa nên dùng. Thời điểm tích luỹ, chưa phải lúc hành động lớn." },
+      { ten: "Cửu Nhị", text: "Rồng hiện nơi đồng, lợi gặp đại nhân. Bắt đầu xuất hiện, cần người dẫn dắt." },
+      { ten: "Cửu Tam", text: "Người quân tử suốt ngày nỗ lực, chiều tối lo lắng. Không có lỗi." },
+      { ten: "Cửu Tứ", text: "Rồng nhảy vọt hay ở vực sâu, không có lỗi. Thời điểm chọn lựa." },
+      { ten: "Cửu Ngũ", text: "Rồng bay trên trời, lợi gặp đại nhân. Đỉnh cao của thành công." },
+      { ten: "Thượng Cửu", text: "Rồng kiêu ngạo, sẽ hối hận. Đỉnh cao phải biết lùi." },
+    ]
+  },
+  {
+    so: 2, glyph: "䷁", vi: "Thuần Khôn", cn: "坤為地", en: "The Receptive",
+    thuong: "Khôn (☷) Đất", ha: "Khôn (☷) Đất",
+    kw: "Âm cực thịnh · Nuôi dưỡng · Thuận thảo · Bền vững",
+    quality: "good",
+    image: `Thuần Khôn là 6 hào âm liên tiếp, đối nghịch Thuần Càn. Tượng trưng cho đất mẹ, sự nuôi dưỡng bao la.
+Đây là quẻ của sự thuận thảo, nhường nhịn, bao dung, bền bỉ. Không dẫn đầu mà theo sau để thành công.`,
+    tinhcam: "Nữ giới nhu hoà, dịu dàng, đây là quẻ rất tốt cho tình cảm của phụ nữ. Cặp đôi thuận thảo, bền vững.",
+    suckhoe: "Sức khoẻ ổn định nhờ sinh hoạt điều độ. Cần tránh ẩm thấp, vấn đề liên quan đến bao tử.",
+    tailoc: "Tài chính ổn định, chắc chắn nhờ tiết kiệm và bền bỉ. Không giàu nhanh nhưng bền lâu.",
+    congdanh: "Hỗ trợ người khác tốt hơn làm chủ. Sự nghiệp tiến chậm nhưng vững.",
+    honnhan: "Hôn nhân hạnh phúc khi biết nhường nhịn. Người vợ tốt, gia đình hoà thuận.",
+    giacanh: "Gia cảnh yên ấm, đất đai, bất động sản thuận lợi.",
+    congviec: "Phù hợp công việc hỗ trợ, chăm sóc, giáo dục, nông nghiệp.",
+    haos: [
+      { ten: "Sơ Lục", text: "Giẫm phải sương giá, băng cứng đang đến. Chú ý dấu hiệu ban đầu." },
+      { ten: "Lục Nhị", text: "Thẳng thắn, vuông vức, lớn lao. Không luyện tập vẫn lợi. Đức hạnh tự nhiên." },
+      { ten: "Lục Tam", text: "Giữ kín vẻ đẹp mà tiếp tục. Có thể theo vua làm việc, không thành mà xong." },
+      { ten: "Lục Tứ", text: "Buộc chặt bao túi, không lỗi cũng không khen. Ẩn mình chờ thời." },
+      { ten: "Lục Ngũ", text: "Váy vàng, đại cát. Địa vị cao nhờ đức hạnh thuần hoà." },
+      { ten: "Thượng Lục", text: "Rồng đánh nhau ngoài đồng, máu vàng đỏ. Khi âm cực đỉnh sẽ hỗn loạn." },
+    ]
+  },
+  {
+    so: 3, glyph: "䷂", vi: "Thuỷ Lôi Truân", cn: "水雷屯", en: "Difficulty at the Beginning",
+    thuong: "Khảm (☵) Nước", ha: "Chấn (☳) Sấm",
+    kw: "Khó khăn ban đầu · Gian nan · Kiên trì · Mầm mống",
+    quality: "mixed",
+    image: `Truân nghĩa là gian truân, khó khăn. Tượng mầm cây mới nhú xuyên qua mặt đất. Thời kỳ sơ khai đầy chông gai.`,
+    tinhcam: "Tình cảm gặp nhiều trắc trở, hiểu lầm. Cần kiên nhẫn, từng bước vượt qua. Đừng vội vã.",
+    suckhoe: "Sức khoẻ không ổn định, dễ gặp bệnh đột xuất. Chú ý thận, tiết niệu.",
+    tailoc: "Tài chính khó khăn giai đoạn đầu, nên chờ đợi, không đầu tư lớn. Kiên nhẫn sẽ qua.",
+    congdanh: "Sự nghiệp gặp nhiều trở ngại ban đầu nhưng nếu kiên trì sẽ có kết quả.",
+    honnhan: "Hôn nhân nhiều thử thách ban đầu, cần vượt qua để đến hạnh phúc.",
+    giacanh: "Gia đình gặp khó khăn, cần cùng nhau vượt qua.",
+    congviec: "Công việc mới gặp nhiều rào cản. Hãy kiên trì và tìm sự hỗ trợ.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Ngập ngừng, lợi ở chỗ ở lại. Lợi lập chư hầu." },
+      { ten: "Lục Nhị", text: "Truân truân đơn đặc, cưỡi ngựa mà quẩn quanh. Kẻ xấu đến cầu hôn, ngay thẳng từ chối." },
+      { ten: "Lục Tam", text: "Đuổi hươu không có người dẫn, chỉ vào trong rừng. Người quân tử lo trước." },
+      { ten: "Lục Tứ", text: "Cưỡi ngựa mà quẩn quanh, cầu hôn mà được. Cát." },
+      { ten: "Cửu Ngũ", text: "Khó khăn trong ân huệ nhỏ. Lớn thì hung." },
+      { ten: "Thượng Lục", text: "Cưỡi ngựa mà quẩn quanh. Khóc máu liên tục." },
+    ]
+  },
+  {
+    so: 4, glyph: "䷃", vi: "Sơn Thuỷ Mông", cn: "山水蒙", en: "Youthful Folly",
+    thuong: "Cấn (☶) Núi", ha: "Khảm (☵) Nước",
+    kw: "Dạy học · Mê muội · Giáo dục · Khai sáng",
+    quality: "mixed",
+    image: `Mông là mê muội, tối tăm. Tượng suối nước chảy dưới núi, chưa biết hướng đi. Quẻ của sự học hỏi, cần người dẫn đường.`,
+    tinhcam: "Còn non nớt trong tình cảm, dễ bị lừa dối. Cần thận trọng, lắng nghe người lớn tuổi hơn.",
+    suckhoe: "Sức khoẻ cần chú ý, đặc biệt trẻ nhỏ. Chú ý bệnh liên quan đến tâm thần, nhận thức.",
+    tailoc: "Tài chính chưa ổn định, cần học hỏi thêm về quản lý tiền bạc trước khi đầu tư.",
+    congdanh: "Đang trong giai đoạn học việc, cần cầu thầy học đạo. Chưa thành danh nhưng tiềm năng tốt.",
+    honnhan: "Cần tìm hiểu kỹ trước khi kết hôn. Tuổi còn trẻ nên học cách yêu thương đúng đắn.",
+    giacanh: "Gia đình cần giáo dục con cái, chú ý uốn nắn từ sớm.",
+    congviec: "Phù hợp với ngành giáo dục, đào tạo. Người trẻ nên tìm thầy giỏi.",
+    haos: [
+      { ten: "Sơ Lục", text: "Phát mông, lợi dùng hình phạt. Buông bỏ gông cùm thì xấu." },
+      { ten: "Cửu Nhị", text: "Bao dung mê muội, cát. Lấy vợ cát. Con trai cai quản gia đình được." },
+      { ten: "Lục Tam", text: "Không nên lấy cô gái này, thấy người giàu mà không giữ được thân, không lợi gì." },
+      { ten: "Lục Tứ", text: "Khốn khổ vì mê muội, xấu hổ." },
+      { ten: "Lục Ngũ", text: "Đồng mông, cát." },
+      { ten: "Thượng Cửu", text: "Đánh mê muội. Không lợi làm giặc, lợi ngăn giặc." },
+    ]
+  },
+  {
+    so: 5, glyph: "䷄", vi: "Thuỷ Thiên Nhu", cn: "水天需", en: "Waiting",
+    thuong: "Khảm (☵) Nước", ha: "Càn (☰) Trời",
+    kw: "Chờ đợi · Nuôi dưỡng · Kiên nhẫn · Thời cơ",
+    quality: "good",
+    image: `Nhu là chờ đợi, nuôi dưỡng. Mây trên trời chưa đổ mưa. Tượng người chờ thời cơ đúng đắn để hành động.`,
+    tinhcam: "Tình cảm cần thêm thời gian vun đắp. Đừng vội vã, hãy chờ đúng lúc. Kết quả sẽ tốt đẹp.",
+    suckhoe: "Sức khoẻ ổn, nhưng nên bồi dưỡng cơ thể. Chú ý ăn uống điều độ.",
+    tailoc: "Tài chính cần chờ đúng thời điểm để đầu tư. Không nên nóng vội. Tiết kiệm trước.",
+    congdanh: "Cơ hội sắp đến, chỉ cần kiên nhẫn. Sự nghiệp sẽ thăng tiến đúng lúc.",
+    honnhan: "Hôn nhân cần thêm thời gian. Chờ đợi đúng người đúng lúc.",
+    giacanh: "Gia cảnh đang chờ cơ hội tốt. Kiên nhẫn, tình hình sẽ cải thiện.",
+    congviec: "Công việc chưa đến lúc hành động lớn. Chuẩn bị kỹ, chờ thời.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Chờ ở ngoài bờ, lợi thường ở cuối, không có lỗi." },
+      { ten: "Cửu Nhị", text: "Chờ trên cát. Có lời lẽ nhỏ, cuối cùng cát." },
+      { ten: "Cửu Tam", text: "Chờ trong bùn, khiến giặc đến." },
+      { ten: "Lục Tứ", text: "Chờ trong máu, ra khỏi hầm." },
+      { ten: "Cửu Ngũ", text: "Chờ trong rượu thịt, chính tốt." },
+      { ten: "Thượng Lục", text: "Vào trong hầm, có ba khách chưa mời đến, kính trọng họ thì cuối cùng cát." },
+    ]
+  },
+  {
+    so: 6, glyph: "䷅", vi: "Thiên Thuỷ Tụng", cn: "天水訟", en: "Conflict",
+    thuong: "Càn (☰) Trời", ha: "Khảm (☵) Nước",
+    kw: "Tranh tụng · Kiện cáo · Bất đồng · Giải quyết",
+    quality: "bad",
+    image: `Tụng là tranh tụng, kiện cáo. Nước và Trời đi ngược chiều nhau, sinh ra mâu thuẫn. Cần phán xử công bằng.`,
+    tinhcam: "Tình cảm đang có bất đồng lớn, cãi vã, kiện cáo. Cần bên thứ ba hoà giải hoặc tốt nhất nên dừng.",
+    suckhoe: "Sức khoẻ lo lắng căng thẳng, dễ mắc bệnh liên quan đến tim, huyết áp.",
+    tailoc: "Tài chính gặp tranh chấp, hợp đồng phá vỡ. Không nên kinh doanh với người lạ lúc này.",
+    congdanh: "Sự nghiệp gặp ganh ghét, đấu đá nội bộ. Cần khéo léo xử lý.",
+    honnhan: "Hôn nhân nhiều mâu thuẫn, dễ ly hôn. Cần hoà giải kịp thời.",
+    giacanh: "Gia đình bất hoà, tranh chấp tài sản. Cần người lớn phân xử.",
+    congviec: "Môi trường làm việc căng thẳng. Tránh tranh chấp lớn.",
+    haos: [
+      { ten: "Sơ Lục", text: "Không kéo dài việc kiện, có lời ra tiếng vào nhưng cuối cùng cát." },
+      { ten: "Cửu Nhị", text: "Không thắng kiện, về nhà trốn. Dân ấp ba trăm hộ không có tai vạ." },
+      { ten: "Lục Tam", text: "Ăn lộc cũ, giữ chính tốt. Nguy mà cuối cùng cát." },
+      { ten: "Cửu Tứ", text: "Không thắng kiện, quay về theo mệnh. Thay đổi an lành, chính tốt." },
+      { ten: "Cửu Ngũ", text: "Kiện tụng, đại cát." },
+      { ten: "Thượng Cửu", text: "Được ban đai da, đến cuối buổi sáng ba lần bị giật mất." },
+    ]
+  },
+  {
+    so: 7, glyph: "䷆", vi: "Địa Thuỷ Sư", cn: "地水師", en: "The Army",
+    thuong: "Khôn (☷) Đất", ha: "Khảm (☵) Nước",
+    kw: "Quân đội · Kỷ luật · Lãnh đạo · Bảo vệ",
+    quality: "good",
+    image: `Sư là quân đội, tập hợp đông người theo kỷ luật. Nước ẩn dưới đất, sức mạnh tiềm tàng. Tượng người lãnh đạo tài giỏi chỉ huy quân dân.`,
+    tinhcam: "Tình cảm cần kỷ luật và trật tự. Người nam chủ động, người nữ cần bảo vệ. Mối quan hệ bền chặt.",
+    suckhoe: "Sức khoẻ tốt nếu giữ kỷ luật sinh hoạt. Chú ý bệnh liên quan đến thận, bàng quang.",
+    tailoc: "Tài chính cần quản lý chặt chẽ, có tổ chức. Đầu tư tập thể tốt hơn cá nhân.",
+    congdanh: "Sự nghiệp trong lĩnh vực quân đội, cảnh sát, quản lý nhân sự rất thuận lợi.",
+    honnhan: "Gia đình cần người đứng đầu mạnh mẽ, kỷ luật. Hôn nhân tốt khi có phân công rõ ràng.",
+    giacanh: "Gia đình đông người, cần người lãnh đạo giỏi.",
+    congviec: "Phù hợp quản lý, lãnh đạo, lực lượng vũ trang.",
+    haos: [
+      { ten: "Sơ Lục", text: "Quân cần kỷ luật, không thì hung dù có tốt." },
+      { ten: "Cửu Nhị", text: "Ở giữa quân đội, cát, không có lỗi. Vua ba lần ban thưởng." },
+      { ten: "Lục Tam", text: "Quân đội có khi chở xác về, hung." },
+      { ten: "Lục Tứ", text: "Quân lùi về bên trái, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Trong đồng có thú, lợi nói lấy đó, không có lỗi." },
+      { ten: "Thượng Lục", text: "Đại quân có lệnh, lập nước khai nhà. Tiểu nhân chớ dùng." },
+    ]
+  },
+  {
+    so: 8, glyph: "䷇", vi: "Thuỷ Địa Tỷ", cn: "水地比", en: "Holding Together",
+    thuong: "Khảm (☵) Nước", ha: "Khôn (☷) Đất",
+    kw: "Đoàn kết · Gần gũi · Hợp tác · Thân thiết",
+    quality: "good",
+    image: `Tỷ là gần gũi, đoàn kết, sát cánh bên nhau. Nước thấm vào đất, không thể tách rời. Tượng vua và dân gắn kết, cộng đồng hoà thuận.`,
+    tinhcam: "Tình cảm gắn bó sâu sắc, bên nhau trong mọi hoàn cảnh. Mối quan hệ thân thiết, chân thật.",
+    suckhoe: "Sức khoẻ ổn định khi có sự hỗ trợ của gia đình, cộng đồng. Tinh thần lạc quan.",
+    tailoc: "Tài chính tốt khi hợp tác, liên kết. Đầu tư cùng bạn bè, đối tác đáng tin.",
+    congdanh: "Sự nghiệp thăng tiến nhờ mạng lưới quan hệ tốt. Được quý nhân giúp đỡ.",
+    honnhan: "Hôn nhân hạnh phúc, gắn bó sâu sắc. Vợ chồng hiểu nhau, cùng vượt khó.",
+    giacanh: "Gia đình đoàn kết, hàng xóm hoà thuận.",
+    congviec: "Teamwork tốt, phù hợp công việc nhóm, cộng đồng.",
+    haos: [
+      { ten: "Sơ Lục", text: "Thành thật gần gũi, không có lỗi. Thành thật đầy bình thì cuối cùng có thêm điều cát khác." },
+      { ten: "Lục Nhị", text: "Gần gũi từ bên trong, chính tốt." },
+      { ten: "Lục Tam", text: "Gần gũi người không đáng gần, hung." },
+      { ten: "Lục Tứ", text: "Gần gũi từ bên ngoài, chính tốt." },
+      { ten: "Cửu Ngũ", text: "Biểu hiện rõ sự gần gũi, vua dùng ba cỗ vây, để mất thú trước, dân ấp không cảnh giới, cát." },
+      { ten: "Thượng Lục", text: "Không có đầu mối gần gũi, hung." },
+    ]
+  },
+  {
+    so: 9, glyph: "䷈", vi: "Phong Thiên Tiểu Súc", cn: "風天小畜", en: "Small Taming",
+    thuong: "Tốn (☴) Gió", ha: "Càn (☰) Trời",
+    kw: "Tích luỹ nhỏ · Ràng buộc nhẹ · Chuẩn bị · Kiên nhẫn",
+    quality: "mixed",
+    image: `Tiểu Súc là tích luỹ nhỏ, gió thổi mây nhưng chưa có mưa. Tượng sức mạnh nhỏ ngăn cản lớn tạm thời.`,
+    tinhcam: "Tình cảm đang ở giai đoạn tích luỹ, chưa đến lúc nói thẳng. Hãy từ từ vun đắp.",
+    suckhoe: "Sức khoẻ cần bồi dưỡng từng chút. Chú ý phổi, hô hấp.",
+    tailoc: "Tài chính đang tích luỹ dần. Không nên đầu tư lớn, chỉ nên để dành.",
+    congdanh: "Sự nghiệp cần thêm tích luỹ kinh nghiệm. Chưa phải lúc bứt phá.",
+    honnhan: "Hôn nhân ổn định nhờ từng bước chắc chắn. Không vội vã.",
+    giacanh: "Gia cảnh bình thường, cần thêm cố gắng.",
+    congviec: "Phù hợp công việc chi tiết, kiên nhẫn, tích luỹ.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Quay về theo đường, sao phải có lỗi? Cát." },
+      { ten: "Cửu Nhị", text: "Kéo về, cát." },
+      { ten: "Cửu Tam", text: "Xe mất căm, vợ chồng trái mắt." },
+      { ten: "Lục Tứ", text: "Có thành thật, máu tan nỗi sợ, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Có thành thật kết nối, giàu có cùng hàng xóm." },
+      { ten: "Thượng Cửu", text: "Đã mưa đã đủ, đức chứa đến chỗ, nguy nguy phụ nữ chính thì hung." },
+    ]
+  },
+  {
+    so: 10, glyph: "䷉", vi: "Thiên Trạch Lý", cn: "天澤履", en: "Treading",
+    thuong: "Càn (☰) Trời", ha: "Đoài (☱) Ao",
+    kw: "Lễ nghĩa · Cẩn thận · Hành vi · Đúng đắn",
+    quality: "good",
+    image: `Lý là giẫm đạp, bước đi. Tượng bước vào đuôi hổ mà không bị cắn vì biết lễ nghĩa. Ý nghĩa về hành vi, cư xử đúng mực.`,
+    tinhcam: "Tình cảm cần lễ nghĩa, cư xử đúng mực. Tránh phóng túng, hành động vội vàng.",
+    suckhoe: "Sức khoẻ tốt, phòng bệnh hơn chữa bệnh. Chú ý đi đứng cẩn thận.",
+    tailoc: "Tài chính ổn nếu làm ăn ngay thẳng. Tránh đường tắt, gian lận.",
+    congdanh: "Sự nghiệp phát triển khi biết lễ nghĩa với người trên. Tuân theo quy tắc.",
+    honnhan: "Hôn nhân cần lễ nghĩa đầy đủ, cưới xin đúng phép.",
+    giacanh: "Gia đình có lễ giáo tốt, con cái được dạy dỗ đúng đắn.",
+    congviec: "Phù hợp ngành luật, ngoại giao, lễ tân.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Hành vi đơn giản, đi tới không có lỗi." },
+      { ten: "Cửu Nhị", text: "Đường bằng phẳng mà đi, người ẩn dật chính tốt, cát." },
+      { ten: "Lục Tam", text: "Người mù mà thấy, người跛 mà đi, đạp đuôi hổ, cắn người, hung." },
+      { ten: "Cửu Tứ", text: "Đạp đuôi hổ, cẩn thận lo lắng, cuối cùng cát." },
+      { ten: "Cửu Ngũ", text: "Quyết đoán mà đi, chính nguy." },
+      { ten: "Thượng Cửu", text: "Xem xét hành vi, xem xét điềm tốt, vòng tròn trở lại, đại cát." },
+    ]
+  },
+  {
+    so: 11, glyph: "䷊", vi: "Địa Thiên Thái", cn: "地天泰", en: "Peace",
+    thuong: "Khôn (☷) Đất", ha: "Càn (☰) Trời",
+    kw: "Thịnh vượng · Hoà bình · Thông suốt · Đại cát",
+    quality: "good",
+    image: `Thái là thịnh vượng, thông suốt. Trời Đất giao hoà, âm dương cân bằng. Vạn vật sinh trưởng trong hoà thuận. Đây là một trong những quẻ đẹp nhất.`,
+    tinhcam: "Tình cảm tuyệt vời, âm dương hoà hợp. Đây là thời kỳ vàng của tình yêu, hôn nhân.",
+    suckhoe: "Sức khoẻ tốt, tinh thần phấn chấn. Cơ thể khoẻ mạnh, ít bệnh tật.",
+    tailoc: "Tài lộc phong phú, cơ hội kiếm tiền nhiều. Đầu tư giai đoạn này rất tốt.",
+    congdanh: "Sự nghiệp đỉnh cao, được quý nhân phù trợ, thăng tiến nhanh.",
+    honnhan: "Hôn nhân hạnh phúc viên mãn. Gia đình sung túc, thuận hoà.",
+    giacanh: "Gia đình thịnh vượng, an vui, mọi người đều khoẻ mạnh.",
+    congviec: "Mọi công việc đều suôn sẻ, thuận lợi. Hãy tận dụng thời cơ.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Nhổ cỏ tranh, rễ liền nhau, đi thì cát." },
+      { ten: "Cửu Nhị", text: "Bao dung hoang dã, dùng vượt sông, không bỏ xa xôi, bạn bè mất đi, được thưởng ở giữa." },
+      { ten: "Cửu Tam", text: "Không có bằng phẳng mà không nghiêng, không đi mà không về. Gian nan giữ chính không có lỗi." },
+      { ten: "Lục Tứ", text: "Bay bay không giàu có cùng hàng xóm, không giới hạn ở thành thật." },
+      { ten: "Lục Ngũ", text: "Đế Ất gả em gái, bằng đó nhận phúc, đại cát." },
+      { ten: "Thượng Lục", text: "Thành xây đổ xuống hào, không dùng quân đội. Từ ấp ra lệnh, xấu hổ mà chính tốt." },
+    ]
+  },
+  {
+    so: 12, glyph: "䷋", vi: "Thiên Địa Bĩ", cn: "天地否", en: "Standstill",
+    thuong: "Càn (☰) Trời", ha: "Khôn (☷) Đất",
+    kw: "Bế tắc · Đình trệ · Cách biệt · Chờ thời",
+    quality: "bad",
+    image: `Bĩ là bế tắc, đình trệ, trái với Thái. Trời Đất không giao hoà, âm dương tách rời. Tiểu nhân lên, quân tử lui.`,
+    tinhcam: "Tình cảm xa cách, không giao tiếp được. Mối quan hệ lạnh nhạt, đóng băng.",
+    suckhoe: "Sức khoẻ suy yếu, khó hồi phục. Chú ý bệnh mãn tính, tiêu hoá.",
+    tailoc: "Tài chính bế tắc, thu không đủ chi. Không nên đầu tư, hãy tiết kiệm.",
+    congdanh: "Sự nghiệp bị cản trở, khó thăng tiến. Chờ thời, ẩn mình.",
+    honnhan: "Hôn nhân trục trặc, vợ chồng xa cách, không tâm sự được.",
+    giacanh: "Gia đình khó khăn, không khí u ám.",
+    congviec: "Công việc trì trệ, đình trệ. Không nên khởi sự mới.",
+    haos: [
+      { ten: "Sơ Lục", text: "Nhổ cỏ tranh, rễ liền nhau, chính tốt, cát hanh." },
+      { ten: "Lục Nhị", text: "Bao dung thừa nhận, tiểu nhân cát, đại nhân bĩ hanh." },
+      { ten: "Lục Tam", text: "Bao dung xấu hổ." },
+      { ten: "Cửu Tứ", text: "Có lệnh không có lỗi, loài đều nhận phúc." },
+      { ten: "Cửu Ngũ", text: "Nghỉ ngơi bĩ, đại nhân cát. Nó mất nó mất, buộc vào bụi dâu." },
+      { ten: "Thượng Cửu", text: "Bĩ đổ, trước bĩ sau vui." },
+    ]
+  },
+  {
+    so: 13, glyph: "䷌", vi: "Thiên Hoả Đồng Nhân", cn: "天火同人", en: "Fellowship",
+    thuong: "Càn (☰) Trời", ha: "Ly (☲) Lửa",
+    kw: "Đoàn kết · Cộng đồng · Hội tụ · Hoà đồng",
+    quality: "good",
+    image: `Đồng Nhân là đoàn kết người với người. Lửa bốc lên trời, sáng rọi khắp nơi. Tượng mọi người cùng chí hướng tụ hội lại.`,
+    tinhcam: "Tình cảm dựa trên sự đồng cảm, chí hướng chung. Mối quan hệ bền vững nhờ hiểu nhau.",
+    suckhoe: "Sức khoẻ tốt khi có tinh thần lạc quan, đoàn kết. Tim và tuần hoàn tốt.",
+    tailoc: "Tài chính thuận lợi nhờ hợp tác nhóm. Dự án chung mang lại lợi nhuận.",
+    congdanh: "Sự nghiệp tốt khi làm việc tập thể. Dễ được quần chúng ủng hộ.",
+    honnhan: "Hôn nhân hạnh phúc vì hai bên có cùng quan điểm sống.",
+    giacanh: "Gia đình hoà thuận, mọi người đồng lòng.",
+    congviec: "Phù hợp công việc xã hội, cộng đồng, ngoại giao.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Đồng nhân ở cửa, không có lỗi." },
+      { ten: "Lục Nhị", text: "Đồng nhân ở tông, xấu hổ." },
+      { ten: "Cửu Tam", text: "Giấu vũ khí trong bụi, lên gò cao của ta, ba năm không dậy." },
+      { ten: "Cửu Tứ", text: "Lên tường không thể tấn công, cát." },
+      { ten: "Cửu Ngũ", text: "Đồng nhân trước gào khóc sau cười, đại quân khắc phục mà gặp nhau." },
+      { ten: "Thượng Cửu", text: "Đồng nhân ở ngoài đồng, không hối hận." },
+    ]
+  },
+  {
+    so: 14, glyph: "䷍", vi: "Hoả Thiên Đại Hữu", cn: "火天大有", en: "Great Possession",
+    thuong: "Ly (☲) Lửa", ha: "Càn (☰) Trời",
+    kw: "Thịnh đại · Phong phú · Giàu có · Đỉnh cao",
+    quality: "good",
+    image: `Đại Hữu là sở hữu lớn lao, phong phú. Lửa trên trời soi rọi khắp nơi, không có vật gì ẩn giấu. Quẻ của giàu có, thịnh vượng cực đại.`,
+    tinhcam: "Tình cảm rực rỡ, nồng nàn. Mối quan hệ đẹp đẽ, được nhiều người ngưỡng mộ.",
+    suckhoe: "Sức khoẻ tốt, tinh lực dồi dào. Nhưng cần tránh kiêu ngạo, thái quá.",
+    tailoc: "Tài lộc vượng phát, đây là thời kỳ vàng để kiếm tiền, tích luỹ của cải.",
+    congdanh: "Sự nghiệp đỉnh cao, được công nhận rộng rãi, quyền lực lớn.",
+    honnhan: "Gia đình sung túc, vợ chồng xứng đôi vừa lứa.",
+    giacanh: "Gia cảnh giàu có, thịnh vượng nhất trong đời.",
+    congviec: "Mọi việc làm ăn đều thắng lợi, lợi nhuận cao.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Không giao thiệp với điều hại, không có lỗi, gian nan thì không có lỗi." },
+      { ten: "Cửu Nhị", text: "Xe lớn chở đồ, có đi mà không có lỗi." },
+      { ten: "Cửu Tam", text: "Công hầu dùng thông đạt thiên tử, tiểu nhân không thể." },
+      { ten: "Cửu Tứ", text: "Không thịnh vượng, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Thành thật của ta, giao tiếp uy nghiêm, cát." },
+      { ten: "Thượng Cửu", text: "Trời giúp đỡ, cát không gì không lợi." },
+    ]
+  },
+  {
+    so: 15, glyph: "䷎", vi: "Địa Sơn Khiêm", cn: "地山謙", en: "Modesty",
+    thuong: "Khôn (☷) Đất", ha: "Cấn (☶) Núi",
+    kw: "Khiêm tốn · Nhún nhường · Đức hạnh · Bền vững",
+    quality: "good",
+    image: `Khiêm là khiêm nhường, núi ẩn dưới đất không khoe khoang. Đây là quẻ duy nhất 6 hào đều tốt, vì đức khiêm làm mọi thứ hanh thông.`,
+    tinhcam: "Tình cảm tốt đẹp nhờ sự khiêm tốn. Không kiêu ngạo, biết lắng nghe, được đối phương yêu mến.",
+    suckhoe: "Sức khoẻ ổn định, tinh thần bình an. Biết điều độ nên ít bệnh tật.",
+    tailoc: "Tài chính ổn định và bền vững. Khiêm tốn trong kinh doanh được nhiều người hỗ trợ.",
+    congdanh: "Sự nghiệp thăng tiến nhờ đức hạnh. Người khiêm tốn luôn được quý mến và tin tưởng.",
+    honnhan: "Hôn nhân viên mãn. Biết nhường nhịn nhau, gia đình hạnh phúc.",
+    giacanh: "Gia đình hoà thuận, không tranh giành.",
+    congviec: "Phù hợp mọi ngành nghề, được đồng nghiệp yêu mến.",
+    haos: [
+      { ten: "Sơ Lục", text: "Khiêm tốn người quân tử, vượt sông lớn, cát." },
+      { ten: "Lục Nhị", text: "Khiêm tốn vang tiếng, chính tốt, cát." },
+      { ten: "Cửu Tam", text: "Khiêm tốn cần cù người quân tử, có chung cuộc, cát." },
+      { ten: "Lục Tứ", text: "Không gì không lợi, khua động khiêm tốn." },
+      { ten: "Lục Ngũ", text: "Không giàu mà dùng hàng xóm, lợi dùng xâm lấn chinh phạt, không gì không lợi." },
+      { ten: "Thượng Lục", text: "Khiêm tốn vang tiếng, lợi dùng quân đội, chinh phạt ấp quốc." },
+    ]
+  },
+  {
+    so: 16, glyph: "䷏", vi: "Lôi Địa Dự", cn: "雷地豫", en: "Enthusiasm",
+    thuong: "Chấn (☳) Sấm", ha: "Khôn (☷) Đất",
+    kw: "Vui vẻ · Hân hoan · Hành động · Thịnh vượng",
+    quality: "good",
+    image: `Dự là vui vẻ, hân hoan, sấm nổ trên đất làm vạn vật phấn khích. Tượng lòng người vui mừng cùng nhau tiến lên.`,
+    tinhcam: "Tình cảm vui tươi, lãng mạn. Đây là thời điểm tốt để bày tỏ tình cảm.",
+    suckhoe: "Tinh thần phấn chấn, khoẻ mạnh. Nhưng đừng quá vui vẻ mà bỏ bê sức khoẻ.",
+    tailoc: "Tài lộc dồi dào, cơ hội kinh doanh mới mẻ. Thời điểm tốt để mở rộng.",
+    congdanh: "Sự nghiệp hứng khởi, nhiều cơ hội. Được nhiều người ủng hộ.",
+    honnhan: "Hôn nhân vui vẻ, gia đình đầm ấm, tiếng cười nhiều.",
+    giacanh: "Gia đình vui tươi, lễ hội, tụ họp nhiều.",
+    congviec: "Phù hợp nghệ thuật, giải trí, âm nhạc, sự kiện.",
+    haos: [
+      { ten: "Sơ Lục", text: "Vui vẻ ra tiếng, hung." },
+      { ten: "Lục Nhị", text: "Vững như đá, không trọn ngày, chính tốt, cát." },
+      { ten: "Lục Tam", text: "Nhìn lên mà vui, hối hận, chậm trễ thì hối hận." },
+      { ten: "Cửu Tứ", text: "Do đó vui mừng, lớn lao có điều thu được, chớ nghi ngờ." },
+      { ten: "Lục Ngũ", text: "Chính thì bệnh, thường không chết." },
+      { ten: "Thượng Lục", text: "Mê muội vui vẻ, thành rồi thay đổi, không có lỗi." },
+    ]
+  },
+  {
+    so: 17, glyph: "䷐", vi: "Trạch Lôi Tuỳ", cn: "澤雷隨", en: "Following",
+    thuong: "Đoài (☱) Ao", ha: "Chấn (☳) Sấm",
+    kw: "Theo đuổi · Thích nghi · Linh hoạt · Đi theo",
+    quality: "good",
+    image: `Tuỳ là đi theo, thích nghi. Sấm vào trong ao yên nghỉ. Tượng biết thời thế, theo người giỏi mà tiến.`,
+    tinhcam: "Tình cảm thuận theo, linh hoạt. Biết chiều ý người yêu, mối quan hệ tốt đẹp.",
+    suckhoe: "Sức khoẻ cần thích nghi với thay đổi thời tiết. Linh hoạt trong sinh hoạt.",
+    tailoc: "Tài chính tốt khi biết theo thị trường. Linh hoạt điều chỉnh chiến lược.",
+    congdanh: "Sự nghiệp thuận lợi khi biết theo thầy, theo xu hướng đúng đắn.",
+    honnhan: "Hôn nhân hoà thuận nhờ biết nhường nhịn và thích nghi.",
+    giacanh: "Gia đình thuận thảo khi mọi người biết theo lẽ phải.",
+    congviec: "Phù hợp vai trò hỗ trợ, tư vấn, theo xu hướng thị trường.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Quan lại thay đổi, chính tốt thì cát. Ra cửa giao du có công." },
+      { ten: "Lục Nhị", text: "Ràng buộc tiểu tử, mất trượng phu." },
+      { ten: "Lục Tam", text: "Ràng buộc trượng phu, mất tiểu tử. Theo đuổi có cầu, lợi ở lại chính." },
+      { ten: "Cửu Tứ", text: "Tuỳ có thu hoạch, chính thì hung. Có thành thật ở đạo, dùng sáng suốt, sao có lỗi?" },
+      { ten: "Cửu Ngũ", text: "Thành thật ở thiện, cát." },
+      { ten: "Thượng Lục", text: "Ràng buộc mà theo, rồi lại kết nối nó. Vua dùng thông đạt ở núi tây, cát." },
+    ]
+  },
+  {
+    so: 18, glyph: "䷑", vi: "Sơn Phong Cổ", cn: "山風蠱", en: "Work on the Decayed",
+    thuong: "Cấn (☶) Núi", ha: "Tốn (☴) Gió",
+    kw: "Sửa chữa · Cải tạo · Hư hỏng · Canh tân",
+    quality: "mixed",
+    image: `Cổ là sâu mọt, hư hỏng cần sửa chữa. Gió dưới núi bế tắc, thứ gì đó đang mục ruỗng. Nhưng biết sửa thì sẽ tốt.`,
+    tinhcam: "Mối quan hệ đang có vấn đề tích luỹ lâu ngày. Cần đối mặt và sửa chữa, không trì hoãn.",
+    suckhoe: "Sức khoẻ có bệnh tật tích luỹ từ lâu. Cần kiểm tra và điều trị kịp thời.",
+    tailoc: "Tài chính có những vấn đề chưa được xử lý. Cần rà soát và sắp xếp lại.",
+    congdanh: "Công việc, tổ chức đang có vấn đề nội tại. Cần cải cách, đổi mới.",
+    honnhan: "Gia đình có tồn tại vấn đề lâu ngày. Cần giải quyết thẳng thắn.",
+    giacanh: "Gia cảnh sa sút cần phục hồi. Phải quyết tâm thay đổi.",
+    congviec: "Phù hợp công việc tái cơ cấu, cải tổ, xây dựng lại.",
+    haos: [
+      { ten: "Sơ Lục", text: "Sửa chữa sự hư hỏng của cha. Có con trai, cha không có lỗi, nguy mà cuối cùng cát." },
+      { ten: "Cửu Nhị", text: "Sửa chữa sự hư hỏng của mẹ, không thể chính tốt." },
+      { ten: "Cửu Tam", text: "Sửa chữa sự hư hỏng của cha, có hối hận nhỏ, không có lỗi lớn." },
+      { ten: "Lục Tứ", text: "Bao dung sự hư hỏng của cha, đi thì xấu hổ." },
+      { ten: "Lục Ngũ", text: "Sửa chữa sự hư hỏng của cha, dùng khen ngợi." },
+      { ten: "Thượng Cửu", text: "Không thờ vua chúa, cao quý công việc của mình." },
+    ]
+  },
+  {
+    so: 19, glyph: "䷒", vi: "Địa Trạch Lâm", cn: "地澤臨", en: "Approach",
+    thuong: "Khôn (☷) Đất", ha: "Đoài (☱) Ao",
+    kw: "Tiến gần · Quản lý · Giám sát · Mùa xuân",
+    quality: "good",
+    image: `Lâm là đến gần, tiếp cận. Đất trên ao, người trên cai quản kẻ dưới. Tượng mùa xuân vạn vật sinh sôi, người lớn tiến gần dân chúng.`,
+    tinhcam: "Tình cảm đang tiến triển tốt, hai người ngày càng gần gũi. Thời điểm tốt để tiến thêm.",
+    suckhoe: "Sức khoẻ đang hồi phục và cải thiện dần. Tinh thần lên cao.",
+    tailoc: "Tài chính đang trong đà tăng trưởng. Thời điểm tốt để đầu tư.",
+    congdanh: "Sự nghiệp đang tiến lên. Được cơ hội quản lý, chịu trách nhiệm lớn hơn.",
+    honnhan: "Hôn nhân hạnh phúc đang đến gần. Thích hợp để cầu hôn hoặc kết hôn.",
+    giacanh: "Gia cảnh ngày càng khởi sắc.",
+    congviec: "Thời điểm tốt để nhận nhiệm vụ mới, thăng chức.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Cùng tiếp cận, chính tốt thì cát." },
+      { ten: "Cửu Nhị", text: "Cùng tiếp cận, cát, không gì không lợi." },
+      { ten: "Lục Tam", text: "Ngọt ngào tiếp cận, không có gì lợi. Đã lo lắng thì không có lỗi." },
+      { ten: "Lục Tứ", text: "Đến đỉnh mà tiếp cận, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Biết mà tiếp cận, điều ích của đại quân, chính tốt, cát." },
+      { ten: "Thượng Lục", text: "Đôn hậu tiếp cận, cát, không có lỗi." },
+    ]
+  },
+  {
+    so: 20, glyph: "䷓", vi: "Phong Địa Quan", cn: "風地觀", en: "Contemplation",
+    thuong: "Tốn (☴) Gió", ha: "Khôn (☷) Đất",
+    kw: "Quan sát · Suy ngẫm · Nhìn xa · Triết học",
+    quality: "good",
+    image: `Quan là quan sát, suy ngẫm. Gió thổi trên đất, ảnh hưởng khắp nơi. Tháp quan sát cho thấy toàn cảnh. Tượng người sáng suốt nhìn rõ mọi việc.`,
+    tinhcam: "Tình cảm cần quan sát kỹ hơn. Hãy lắng nghe và hiểu đối phương trước khi hành động.",
+    suckhoe: "Sức khoẻ cần theo dõi, kiểm tra định kỳ. Chú ý những dấu hiệu nhỏ.",
+    tailoc: "Tài chính cần quan sát thị trường kỹ trước khi đầu tư. Đừng vội vàng.",
+    congdanh: "Sự nghiệp cần nhìn xa trông rộng. Phân tích tổng thể trước khi hành động.",
+    honnhan: "Hôn nhân cần quan sát và hiểu nhau sâu sắc hơn.",
+    giacanh: "Quan sát gia đình, hiểu rõ vấn đề để giải quyết tốt hơn.",
+    congviec: "Phù hợp nghiên cứu, phân tích, chiến lược, giáo dục.",
+    haos: [
+      { ten: "Sơ Lục", text: "Quan sát trẻ con, không có lỗi cho tiểu nhân, xấu hổ cho người quân tử." },
+      { ten: "Lục Nhị", text: "Nhìn qua khe hở, lợi cho phụ nữ chính tốt." },
+      { ten: "Lục Tam", text: "Quan sát sự tiến lui của ta để quyết định tiến hay lui." },
+      { ten: "Lục Tứ", text: "Quan sát ánh sáng của nước, lợi làm khách của vua." },
+      { ten: "Cửu Ngũ", text: "Quan sát cuộc sống của ta, người quân tử không có lỗi." },
+      { ten: "Thượng Cửu", text: "Quan sát cuộc sống của họ, người quân tử không có lỗi." },
+    ]
+  },
+  {
+    so: 21, glyph: "䷔", vi: "Hoả Lôi Phệ Hạp", cn: "火雷噬嗑", en: "Biting Through",
+    thuong: "Ly (☲) Lửa", ha: "Chấn (☳) Sấm",
+    kw: "Pháp luật · Xử lý · Cắn qua · Công lý",
+    quality: "mixed",
+    image: `Phệ Hạp là cắn qua, nuốt vật cứng. Lửa và Sấm phối hợp mạnh mẽ để xử lý trở ngại. Tượng pháp luật phán xử, xử lý tội phạm.`,
+    tinhcam: "Tình cảm có trở ngại cần vượt qua. Cần quyết đoán giải quyết vấn đề tồn đọng.",
+    suckhoe: "Cần điều trị dứt điểm, không để bệnh kéo dài. Phẫu thuật nếu cần.",
+    tailoc: "Tài chính có tranh chấp cần giải quyết. Kiện tụng có thể xảy ra.",
+    congdanh: "Công việc cần quyết đoán xử lý vấn đề. Không để tồn tại mà dây dưa.",
+    honnhan: "Gia đình có xích mích cần được phán xử rõ ràng, không bao che.",
+    giacanh: "Gia cảnh có vấn đề cần giải quyết triệt để.",
+    congviec: "Phù hợp luật pháp, kiểm tra, điều tra, giám sát.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Đi giày đeo gông chân, không có lỗi." },
+      { ten: "Lục Nhị", text: "Cắn thịt, diệt mũi, không có lỗi." },
+      { ten: "Lục Tam", text: "Cắn thịt cũ, gặp độc, xấu hổ nhỏ không có lỗi." },
+      { ten: "Cửu Tứ", text: "Cắn thịt khô xương, đạt kim mũi tên, lợi ở gian khổ chính, cát." },
+      { ten: "Lục Ngũ", text: "Cắn thịt khô, đạt vàng vàng, chính nguy không có lỗi." },
+      { ten: "Thượng Cửu", text: "Đeo gông gỗ diệt tai, hung." },
+    ]
+  },
+  {
+    so: 22, glyph: "䷕", vi: "Sơn Hoả Bí", cn: "山火賁", en: "Grace",
+    thuong: "Cấn (☶) Núi", ha: "Ly (☲) Lửa",
+    kw: "Trang trí · Vẻ đẹp · Văn hoá · Hình thức",
+    quality: "good",
+    image: `Bí là trang trí, vẻ đẹp bề ngoài. Lửa sáng dưới núi làm cho núi đẹp thêm. Nghệ thuật, văn hoá làm cuộc sống thêm đẹp nhưng đừng chỉ chú trọng hình thức.`,
+    tinhcam: "Tình cảm đẹp đẽ như hoa, nhưng cần có chiều sâu bên trong. Đừng chỉ chú trọng bề ngoài.",
+    suckhoe: "Sức khoẻ tốt vẻ ngoài nhưng cần chú ý nội tâm. Tránh căng thẳng kéo dài.",
+    tailoc: "Tài chính cần cân bằng giữa hình thức và thực chất. Đừng chi nhiều cho bề ngoài.",
+    congdanh: "Sự nghiệp nghệ thuật, thiết kế, thời trang rất phù hợp.",
+    honnhan: "Hôn nhân đẹp bề ngoài nhưng cần củng cố nội tâm, tình cảm thật sự.",
+    giacanh: "Gia đình chú trọng văn hoá, giáo dưỡng, nghệ thuật.",
+    congviec: "Phù hợp nghệ thuật, thiết kế, truyền thông, văn hoá.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Trang trí bàn chân, bỏ xe đi bộ." },
+      { ten: "Lục Nhị", text: "Trang trí râu của ta." },
+      { ten: "Cửu Tam", text: "Trang trí nhuận thấm, thường chính tốt, cát." },
+      { ten: "Lục Tứ", text: "Trang trí trắng toát, ngựa trắng bay, không phải kẻ cướp là đến cầu hôn." },
+      { ten: "Lục Ngũ", text: "Trang trí vườn đồi, vải lụa ít ỏi, xấu hổ mà cuối cùng cát." },
+      { ten: "Thượng Cửu", text: "Trang trí trắng toát, không có lỗi." },
+    ]
+  },
+  {
+    so: 23, glyph: "䷖", vi: "Sơn Địa Bác", cn: "山地剝", en: "Splitting Apart",
+    thuong: "Cấn (☶) Núi", ha: "Khôn (☷) Đất",
+    kw: "Suy tàn · Bóc lột · Tàn phá · Chờ đợi",
+    quality: "bad",
+    image: `Bác là bóc ra, suy tàn. 5 hào âm ăn mòn một hào dương còn lại. Tượng mùa thu cây lá rụng, cần chờ đợi mùa xuân.`,
+    tinhcam: "Tình cảm đang suy tàn, bị bào mòn dần. Rất khó duy trì, cần xem xét lại.",
+    suckhoe: "Sức khoẻ yếu đi, bệnh tật dễ xâm nhập. Cần nghỉ ngơi và điều dưỡng.",
+    tailoc: "Tài chính xuống dốc, thua lỗ. Không nên đầu tư giai đoạn này.",
+    congdanh: "Sự nghiệp tụt dốc, bị gièm pha. Nên ẩn mình chờ thời.",
+    honnhan: "Hôn nhân lung lay, có nguy cơ đổ vỡ. Cần cứu vãn kịp thời.",
+    giacanh: "Gia cảnh suy vi, cần bảo tồn những gì còn lại.",
+    congviec: "Tránh quyết định lớn, chờ thời cơ mới.",
+    haos: [
+      { ten: "Sơ Lục", text: "Bóc giường qua chân, xem thường chính, hung." },
+      { ten: "Lục Nhị", text: "Bóc giường qua phần cứng, xem thường chính, hung." },
+      { ten: "Lục Tam", text: "Bóc nó, không có lỗi." },
+      { ten: "Lục Tứ", text: "Bóc giường qua da, hung." },
+      { ten: "Lục Ngũ", text: "Xâu cá, dùng người trong cung, không gì không lợi." },
+      { ten: "Thượng Cửu", text: "Quả lớn không ăn, người quân tử được xe, tiểu nhân bóc nhà." },
+    ]
+  },
+  {
+    so: 24, glyph: "䷗", vi: "Địa Lôi Phục", cn: "地雷復", en: "Return",
+    thuong: "Khôn (☷) Đất", ha: "Chấn (☳) Sấm",
+    kw: "Trở về · Phục hồi · Bắt đầu mới · Dương khí",
+    quality: "good",
+    image: `Phục là trở về, phục hồi. Một hào dương đầu tiên quay trở lại sau 5 hào âm. Tượng mùa đông qua đi, xuân về, dương khí bắt đầu khôi phục.`,
+    tinhcam: "Tình cảm có cơ hội quay lại, làm mới. Nếu đã từng xa cách, đây là cơ hội hàn gắn.",
+    suckhoe: "Sức khoẻ đang phục hồi sau bệnh tật. Dần dần sẽ tốt hơn. Cần nghỉ ngơi đầy đủ.",
+    tailoc: "Tài chính bắt đầu hồi phục sau giai đoạn khó khăn. Tín hiệu tốt trở lại.",
+    congdanh: "Sự nghiệp sau thời kỳ trì trệ sắp có cơ hội mới. Hãy sẵn sàng.",
+    honnhan: "Có thể tái hợp sau thời gian xa cách. Hoặc bắt đầu lại từ đầu.",
+    giacanh: "Gia cảnh bắt đầu khởi sắc trở lại sau khó khăn.",
+    congviec: "Thời điểm tốt để khởi đầu mới, thử lại sau thất bại.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Không xa mà trở về, không đến ăn năn, đại cát." },
+      { ten: "Lục Nhị", text: "Nghỉ ngơi trở về, cát." },
+      { ten: "Lục Tam", text: "Thường trở về, nguy không có lỗi." },
+      { ten: "Lục Tứ", text: "Đi giữa đường trở về, một mình mà đi." },
+      { ten: "Lục Ngũ", text: "Trung thực trở về, không hối hận." },
+      { ten: "Thượng Lục", text: "Mê lạc trở về, hung, có tai hoạ và lỗi lầm." },
+    ]
+  },
+  {
+    so: 25, glyph: "䷘", vi: "Thiên Lôi Vô Vọng", cn: "天雷無妄", en: "Innocence",
+    thuong: "Càn (☰) Trời", ha: "Chấn (☳) Sấm",
+    kw: "Vô tư · Chân thật · Thuận tự nhiên · Không kỳ vọng",
+    quality: "good",
+    image: `Vô Vọng là không kỳ vọng, vô tư, thuận theo tự nhiên. Trời sấm hành động theo lẽ trời, không tư lợi. Làm điều tốt không cầu báo.`,
+    tinhcam: "Tình cảm trong sáng, chân thật. Không toan tính. Tình yêu vô điều kiện rất tốt đẹp.",
+    suckhoe: "Sức khoẻ tốt khi sống thuận tự nhiên. Tránh thuốc không cần thiết.",
+    tailoc: "Tài chính tốt khi làm ăn thẳng thắn, không gian lận.",
+    congdanh: "Sự nghiệp thuận lợi khi hành động theo lương tâm, không tính toán quá nhiều.",
+    honnhan: "Hôn nhân tốt đẹp khi hai người chân thật, không giả tạo.",
+    giacanh: "Gia đình đơn giản, chân thành, hạnh phúc thật sự.",
+    congviec: "Phù hợp mọi ngành khi hành động theo lẽ phải.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Vô vọng mà đi, cát." },
+      { ten: "Lục Nhị", text: "Không cày mà gặt, không vỡ ruộng mà đã có đất. Lợi đi đâu đó." },
+      { ten: "Lục Tam", text: "Vô vọng mà có tai vạ, trâu buộc, người đi qua kiếm được, người dân mất đó." },
+      { ten: "Cửu Tứ", text: "Có thể chính tốt, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Vô vọng mà bệnh, không dùng thuốc, có vui." },
+      { ten: "Thượng Cửu", text: "Vô vọng mà đi, hung, không lợi gì cả." },
+    ]
+  },
+  {
+    so: 26, glyph: "䷙", vi: "Sơn Thiên Đại Súc", cn: "山天大畜", en: "Great Taming",
+    thuong: "Cấn (☶) Núi", ha: "Càn (☰) Trời",
+    kw: "Tích luỹ lớn · Kiềm chế · Học hỏi · Vun bồi",
+    quality: "good",
+    image: `Đại Súc là tích luỹ lớn, kiềm chế sức mạnh. Núi giữ lại trời, năng lượng lớn được tích trữ. Tượng học rộng tài nhiều, chờ thời xuất hiện.`,
+    tinhcam: "Tình cảm cần thêm thời gian tích luỹ, vun đắp. Bền vững từ từ.",
+    suckhoe: "Sức khoẻ tốt khi biết tích luỹ, bồi dưỡng cơ thể đúng cách.",
+    tailoc: "Tài chính tích luỹ dần, không nên tiêu xài quá mức. Thời gian sẽ tạo ra sự giàu có.",
+    congdanh: "Sự nghiệp phát triển nhờ tích luỹ kiến thức, kinh nghiệm. Thành công lớn đang chờ.",
+    honnhan: "Hôn nhân bền vững khi đã xây dựng nền tảng vững chắc.",
+    giacanh: "Gia cảnh phát triển nhờ tích luỹ của nhiều đời.",
+    congviec: "Phù hợp nghiên cứu, học thuật, lưu trữ, bảo tồn.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Có nguy hiểm, lợi thôi." },
+      { ten: "Cửu Nhị", text: "Xe mất trục." },
+      { ten: "Cửu Tam", text: "Ngựa tốt đuổi theo, lợi gian khổ chính. Ngày thực hành xe ngựa, lợi đi đâu đó." },
+      { ten: "Lục Tứ", text: "Ván chắn đầu bò tơ, đại cát." },
+      { ten: "Lục Ngũ", text: "Răng lợn đực thiến, cát." },
+      { ten: "Thượng Cửu", text: "Con đường trời, hanh." },
+    ]
+  },
+  {
+    so: 27, glyph: "䷚", vi: "Sơn Lôi Di", cn: "山雷頤", en: "Nourishment",
+    thuong: "Cấn (☶) Núi", ha: "Chấn (☳) Sấm",
+    kw: "Nuôi dưỡng · Ăn uống · Dưỡng sinh · Lời nói",
+    quality: "mixed",
+    image: `Di là nuôi dưỡng, ăn uống, lời nói. Miệng ăn như sấm, hàm trên bất động như núi. Biết nuôi thân, nuôi đức mới tốt.`,
+    tinhcam: "Tình cảm cần nuôi dưỡng bằng lời nói, hành động quan tâm. Đừng bỏ bê.",
+    suckhoe: "Sức khoẻ liên quan đến ăn uống. Chú ý dinh dưỡng, hệ tiêu hoá, miệng.",
+    tailoc: "Tài chính cần chú ý thu chi, nuôi dưỡng nguồn tiền hợp lý.",
+    congdanh: "Sự nghiệp cần lời nói cẩn thận. Những gì bạn nói sẽ ảnh hưởng đến sự nghiệp.",
+    honnhan: "Hôn nhân cần nuôi dưỡng bằng tình yêu thương, ân cần.",
+    giacanh: "Gia đình cần quan tâm đến sức khoẻ, ăn uống của từng người.",
+    congviec: "Phù hợp ẩm thực, y tế, chăm sóc sức khoẻ, giáo dục.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Bỏ linh quy của mình, nhìn ta cựa quậy hàm, hung." },
+      { ten: "Lục Nhị", text: "Thế đảo mà nuôi dưỡng, lệch khỏi đường, đi lên đồi nuôi dưỡng, đi thì hung." },
+      { ten: "Lục Tam", text: "Lệch khỏi đường nuôi dưỡng, chính thì hung, mười năm không dùng, không lợi." },
+      { ten: "Lục Tứ", text: "Thế đảo mà nuôi dưỡng, cát, hổ nhìn đang chờ đợi, ham muốn của nó đuổi theo, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Lệch đường, ở lại chính tốt thì cát, không thể vượt sông lớn." },
+      { ten: "Thượng Cửu", text: "Do đó nuôi dưỡng, nguy cơ mà cát, lợi vượt sông lớn." },
+    ]
+  },
+  {
+    so: 28, glyph: "䷛", vi: "Trạch Phong Đại Quá", cn: "澤風大過", en: "Great Exceeding",
+    thuong: "Đoài (☱) Ao", ha: "Tốn (☴) Gió",
+    kw: "Quá mức · Gánh nặng · Đặc biệt · Khủng hoảng",
+    quality: "bad",
+    image: `Đại Quá là vượt quá mức. Nóc nhà đang oằn xuống, xà đầu đuôi yếu nhưng giữa mạnh. Tình trạng khủng hoảng cần hành động khác thường.`,
+    tinhcam: "Tình cảm đang ở trạng thái cực đoan, quá nặng nề. Cần giải phóng hoặc điều chỉnh.",
+    suckhoe: "Sức khoẻ bị kiệt sức quá mức. Cần nghỉ ngơi khẩn cấp, giảm tải.",
+    tailoc: "Tài chính gánh nặng quá lớn, nợ nhiều. Cần tái cơ cấu gấp.",
+    congdanh: "Sự nghiệp đang gánh quá nhiều, dễ sụp đổ. Cần phân chia bớt.",
+    honnhan: "Hôn nhân đang chịu áp lực quá lớn từ bên ngoài hoặc bên trong.",
+    giacanh: "Gia cảnh gặp khủng hoảng, cần hành động quyết liệt.",
+    congviec: "Cần xem xét lại toàn bộ, tránh quá tải.",
+    haos: [
+      { ten: "Sơ Lục", text: "Lót cỏ mao trắng, không có lỗi." },
+      { ten: "Cửu Nhị", text: "Cây liễu khô sinh ra mầm non, ông già được cô gái trẻ làm vợ, không gì không lợi." },
+      { ten: "Cửu Tam", text: "Xà nhà oằn xuống, hung." },
+      { ten: "Cửu Tứ", text: "Xà nhà cong lên, cát. Có thứ khác thì xấu hổ." },
+      { ten: "Cửu Ngũ", text: "Cây liễu khô sinh hoa, bà già được ông trẻ làm chồng, không lỗi không khen." },
+      { ten: "Thượng Lục", text: "Vượt qua nước ngập đầu, hung, không có lỗi." },
+    ]
+  },
+  {
+    so: 29, glyph: "䷜", vi: "Thuần Khảm", cn: "坎為水", en: "The Abysmal",
+    thuong: "Khảm (☵) Nước", ha: "Khảm (☵) Nước",
+    kw: "Hiểm nguy · Vực sâu · Thử thách · Kiên định",
+    quality: "bad",
+    image: `Thuần Khảm là hiểm nguy lặp lại, hố sâu. Nước chồng lên nước, nguy hiểm chồng chất. Chỉ người thành thật, kiên định mới vượt qua.`,
+    tinhcam: "Tình cảm đang ở trong tình huống nguy hiểm, phức tạp. Cần thành thật và kiên định.",
+    suckhoe: "Sức khoẻ rất đáng lo ngại, bệnh nặng. Cần điều trị tích cực.",
+    tailoc: "Tài chính nguy hiểm, dễ mất mát lớn. Cần cẩn thận cực kỳ.",
+    congdanh: "Sự nghiệp đầy trắc trở, bẫy giăng khắp nơi. Cần tỉnh táo.",
+    honnhan: "Hôn nhân trải qua giai đoạn cực kỳ khó khăn, có thể có ngoại tình.",
+    giacanh: "Gia cảnh gặp nhiều tai hoạ liên tiếp.",
+    congviec: "Phải hết sức cẩn thận, mọi quyết định đều có rủi ro cao.",
+    haos: [
+      { ten: "Sơ Lục", text: "Quen với hố hiểm, vào hố hiểm, hung." },
+      { ten: "Cửu Nhị", text: "Hố hiểm có nguy, cầu được nhỏ." },
+      { ten: "Lục Tam", text: "Đến thì tới thì có hố hiểm, nguy và thêm gối, vào hố hiểm, chớ dùng." },
+      { ten: "Lục Tứ", text: "Bình rượu, thêm bình, dùng cành thô, nạp vào từ cửa sổ, sau cùng không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Hố không tràn, bình, không có lỗi." },
+      { ten: "Thượng Lục", text: "Buộc dây thừng, đặt vào bụi gai, ba năm không được, hung." },
+    ]
+  },
+  {
+    so: 30, glyph: "䷝", vi: "Thuần Ly", cn: "離為火", en: "The Clinging",
+    thuong: "Ly (☲) Lửa", ha: "Ly (☲) Lửa",
+    kw: "Ánh sáng · Rõ ràng · Lệ thuộc · Vẻ đẹp",
+    quality: "good",
+    image: `Thuần Ly là lửa sáng rực rỡ, ánh sáng. Lửa bám vào vật để cháy. Tượng sự sáng suốt, văn minh, nhưng cần nương tựa.`,
+    tinhcam: "Tình cảm sáng sủa, rực rỡ. Nhưng cần nương tựa vào nhau, không tự cao.",
+    suckhoe: "Sức khoẻ tốt, tinh thần minh mẫn. Chú ý mắt, tim, huyết áp.",
+    tailoc: "Tài chính sáng sủa, minh bạch. Kinh doanh trong lĩnh vực liên quan đến ánh sáng, điện.",
+    congdanh: "Sự nghiệp rực rỡ, được chú ý. Phù hợp biểu diễn, truyền thông.",
+    honnhan: "Hôn nhân sáng sủa, vợ chồng soi sáng lẫn nhau.",
+    giacanh: "Gia đình văn minh, sáng sủa, yêu thương nhau.",
+    congviec: "Phù hợp truyền thông, nghệ thuật, giảng dạy, năng lượng.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Bước chân lộn xộn, kính trọng nó thì không có lỗi." },
+      { ten: "Lục Nhị", text: "Ánh vàng, đại cát." },
+      { ten: "Cửu Tam", text: "Ánh mặt trời lặn, không gõ bình mà ca thì than thở của người già, hung." },
+      { ten: "Cửu Tứ", text: "Đột nhiên đến, cháy, chết, bỏ." },
+      { ten: "Lục Ngũ", text: "Rơi lệ trước sau, bi ai, cát." },
+      { ten: "Thượng Cửu", text: "Vua dùng chinh phạt, có khen, chém đầu bắt không phải đồng loại, không có lỗi." },
+    ]
+  },
+  {
+    so: 31, glyph: "䷞", vi: "Trạch Sơn Hàm", cn: "澤山咸", en: "Influence",
+    thuong: "Đoài (☱) Ao", ha: "Cấn (☶) Núi",
+    kw: "Cảm ứng · Tình cảm · Thu hút · Hoà hợp",
+    quality: "good",
+    image: `Hàm là cảm ứng lẫn nhau, thu hút. Ao trên núi, âm dương giao cảm. Đây là quẻ đầu tiên của phần Hạ Kinh, nói về tình cảm nam nữ, hôn nhân.`,
+    tinhcam: "Quẻ tình cảm số một! Tình yêu mãnh liệt, hai người cảm ứng với nhau sâu sắc. Rất tốt cho tình yêu.",
+    suckhoe: "Tinh thần sảng khoái, tình cảm tốt giúp sức khoẻ tốt.",
+    tailoc: "Tài chính thuận lợi nhờ mạng lưới quan hệ, biết cảm ứng với thị trường.",
+    congdanh: "Sự nghiệp tốt khi biết thu hút sự chú ý, được lòng người.",
+    honnhan: "Hôn nhân tuyệt vời! Vợ chồng hoà hợp, cảm thông sâu sắc.",
+    giacanh: "Gia đình hoà thuận nhờ cảm thông lẫn nhau.",
+    congviec: "Phù hợp marketing, nghệ thuật, tư vấn, trị liệu.",
+    haos: [
+      { ten: "Sơ Lục", text: "Cảm ứng ngón chân cái." },
+      { ten: "Lục Nhị", text: "Cảm ứng ống chân, hung, ở lại thì cát." },
+      { ten: "Cửu Tam", text: "Cảm ứng đùi, giữ lấy theo đó đi, xấu hổ." },
+      { ten: "Cửu Tứ", text: "Chính tốt thì cát, hối hận mất. Lại vẩn vơ đi theo ý, bạn bè theo suy nghĩ của ngươi." },
+      { ten: "Cửu Ngũ", text: "Cảm ứng gáy cổ, không hối hận." },
+      { ten: "Thượng Lục", text: "Cảm ứng má miệng lưỡi." },
+    ]
+  },
+  {
+    so: 32, glyph: "䷟", vi: "Lôi Phong Hằng", cn: "雷風恒", en: "Duration",
+    thuong: "Chấn (☳) Sấm", ha: "Tốn (☴) Gió",
+    kw: "Bền vững · Lâu dài · Kiên trì · Thuỷ chung",
+    quality: "good",
+    image: `Hằng là thường xuyên, bền vững, lâu dài. Sấm và Gió củng cố nhau. Tượng hôn nhân bền vững, sự kiên trì theo đuổi mục tiêu dài hạn.`,
+    tinhcam: "Tình cảm bền vững, thuỷ chung. Mối quan hệ lâu dài, đáng tin cậy.",
+    suckhoe: "Sức khoẻ ổn định nhờ lối sống đều đặn, kiên trì.",
+    tailoc: "Tài chính bền vững nhờ kiên trì làm việc, không thay đổi đột ngột.",
+    congdanh: "Sự nghiệp bền vững khi kiên trì theo đuổi một hướng.",
+    honnhan: "Hôn nhân là quẻ lý tưởng! Vợ chồng bền vững, thuỷ chung son sắt.",
+    giacanh: "Gia đình bền vững, truyền thống được gìn giữ.",
+    congviec: "Phù hợp mọi nghề khi kiên trì và nhất quán.",
+    haos: [
+      { ten: "Sơ Lục", text: "Đào sâu mà thường, chính thì hung, không lợi gì." },
+      { ten: "Cửu Nhị", text: "Hối hận mất." },
+      { ten: "Cửu Tam", text: "Không thường xuyên đức hạnh, có người xấu hổ, chính thì xấu hổ." },
+      { ten: "Cửu Tứ", text: "Không có thú trong đồng." },
+      { ten: "Lục Ngũ", text: "Thường xuyên đức hạnh của nó, chính tốt, người vợ cát, người chồng hung." },
+      { ten: "Thượng Lục", text: "Rung động mà thường xuyên, hung." },
+    ]
+  },
+  {
+    so: 33, glyph: "䷠", vi: "Thiên Sơn Độn", cn: "天山遯", en: "Retreat",
+    thuong: "Càn (☰) Trời", ha: "Cấn (☶) Núi",
+    kw: "Rút lui · Ẩn dật · Lánh nạn · Chờ thời",
+    quality: "mixed",
+    image: `Độn là rút lui, ẩn dật. Trời rút lui lên cao, bỏ núi lại. Tượng người quân tử biết thời thế mà ẩn mình, tránh tiểu nhân.`,
+    tinhcam: "Tình cảm đang ở giai đoạn cần rút lui, giữ khoảng cách. Đừng cố chấp.",
+    suckhoe: "Sức khoẻ cần nghỉ ngơi, tránh xa nơi ồn ào.",
+    tailoc: "Tài chính cần thu hồi vốn, rút lui khỏi đầu tư rủi ro.",
+    congdanh: "Sự nghiệp nên ẩn mình, chờ thời cơ tốt hơn. Đừng cố tranh giành.",
+    honnhan: "Cặp đôi nên có không gian riêng tư, đừng quá gắn chặt.",
+    giacanh: "Gia đình cần ẩn cư, tránh tranh chấp bên ngoài.",
+    congviec: "Nên lui về phòng thủ, chờ thời cơ tốt hơn.",
+    haos: [
+      { ten: "Sơ Lục", text: "Đuôi độn, nguy, chớ đi đâu." },
+      { ten: "Lục Nhị", text: "Buộc chặt bằng da vàng, không ai thắng được." },
+      { ten: "Cửu Tam", text: "Độn bị ràng buộc, có bệnh nguy, nuôi tôi tớ và vợ thì cát." },
+      { ten: "Cửu Tứ", text: "Yêu mà độn, người quân tử cát, tiểu nhân thì không." },
+      { ten: "Cửu Ngũ", text: "Xuất sắc mà độn, chính tốt thì cát." },
+      { ten: "Thượng Cửu", text: "Phong phú mà độn, không gì không lợi." },
+    ]
+  },
+  {
+    so: 34, glyph: "䷡", vi: "Lôi Thiên Đại Tráng", cn: "雷天大壯", en: "Great Power",
+    thuong: "Chấn (☳) Sấm", ha: "Càn (☰) Trời",
+    kw: "Mạnh mẽ · Oai phong · Quyết đoán · Cẩn trọng",
+    quality: "mixed",
+    image: `Đại Tráng là sức mạnh lớn lao. Sấm trên trời, uy lực vang dội. Nhưng mạnh mà không khéo sẽ bị gãy như dê húc vào rào.`,
+    tinhcam: "Tình cảm mãnh liệt, đam mê. Nhưng đừng quá áp đặt, cần biết kìm chế.",
+    suckhoe: "Sức khoẻ dồi dào, tràn đầy năng lượng. Cẩn thận chấn thương do quá sức.",
+    tailoc: "Tài chính mạnh mẽ nhưng cần kiểm soát, đừng liều lĩnh quá.",
+    congdanh: "Sự nghiệp đang ở đỉnh cao, nhưng cần cẩn thận không lạm quyền.",
+    honnhan: "Cần cân bằng quyền lực trong hôn nhân, đừng quá kiểm soát đối phương.",
+    giacanh: "Gia đình có quyền lực nhưng cần công bằng.",
+    congviec: "Phù hợp lãnh đạo, quân sự, thi đấu, cạnh tranh.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Tráng ở ngón chân, đi thì hung, có thành thật." },
+      { ten: "Cửu Nhị", text: "Chính tốt thì cát." },
+      { ten: "Cửu Tam", text: "Tiểu nhân dùng tráng, người quân tử dùng lưới. Chính nguy, dê đực húc vào rào giậu, vướng vào sừng." },
+      { ten: "Cửu Tứ", text: "Chính tốt thì cát, hối hận mất. Rào giậu mở ra, không vướng, tráng ở trục xe lớn." },
+      { ten: "Lục Ngũ", text: "Mất dê ở chỗ dễ dàng, không hối hận." },
+      { ten: "Thượng Lục", text: "Dê đực húc vào rào giậu, không thể lùi không thể tiến, không lợi, gian khổ thì cát." },
+    ]
+  },
+  {
+    so: 35, glyph: "䷢", vi: "Hoả Địa Tấn", cn: "火地晉", en: "Progress",
+    thuong: "Ly (☲) Lửa", ha: "Khôn (☷) Đất",
+    kw: "Tiến bộ · Thăng tiến · Sáng rõ · Đi lên",
+    quality: "good",
+    image: `Tấn là tiến lên, mặt trời mọc trên đất, sáng dần. Tượng sự tiến bộ từng bước rõ ràng, được công nhận.`,
+    tinhcam: "Tình cảm đang tiến triển tốt, ngày càng tốt hơn. Sáng sủa và hy vọng.",
+    suckhoe: "Sức khoẻ đang phục hồi, dần dần tốt hơn. Tinh thần lạc quan.",
+    tailoc: "Tài chính tiến lên, thu nhập tăng dần. Sáng sủa tương lai.",
+    congdanh: "Sự nghiệp thăng tiến rõ rệt, được cấp trên công nhận.",
+    honnhan: "Hôn nhân ngày càng tốt đẹp hơn, vợ chồng tiến bộ cùng nhau.",
+    giacanh: "Gia cảnh ngày càng khởi sắc.",
+    congviec: "Thời điểm tốt để xin thăng chức, thăng tiến sự nghiệp.",
+    haos: [
+      { ten: "Sơ Lục", text: "Tấn như lo lắng, chính tốt thì cát. Không tin tưởng, bình tĩnh mà không có lỗi." },
+      { ten: "Lục Nhị", text: "Tấn như lo lắng, chính tốt thì cát. Nhận phúc lớn này từ thái hậu." },
+      { ten: "Lục Tam", text: "Chúng tin tưởng, hối hận mất." },
+      { ten: "Cửu Tứ", text: "Tấn như chuột, chính thì nguy." },
+      { ten: "Lục Ngũ", text: "Hối hận mất, mất được chớ lo, đi thì cát, không gì không lợi." },
+      { ten: "Thượng Cửu", text: "Tấn sừng của nó, duy trì chinh phạt ấp quốc, nguy mà cát, không có lỗi, chính thì xấu hổ." },
+    ]
+  },
+  {
+    so: 36, glyph: "䷣", vi: "Địa Hoả Minh Di", cn: "地火明夷", en: "Darkening of the Light",
+    thuong: "Khôn (☷) Đất", ha: "Ly (☲) Lửa",
+    kw: "Ánh sáng bị che · Ẩn nhẫn · Thời khó · Bảo tồn",
+    quality: "bad",
+    image: `Minh Di là ánh sáng bị tổn thương, bị che khuất. Lửa ẩn dưới đất, người sáng suốt trong thời loạn phải giả vờ u tối để tự bảo vệ.`,
+    tinhcam: "Tình cảm đang bị che khuất, ức chế. Cần nhẫn nhịn, che giấu cảm xúc thật sự.",
+    suckhoe: "Sức khoẻ yếu, tinh thần u ám. Cần tự bảo vệ, giữ gìn sức khoẻ.",
+    tailoc: "Tài chính bị che giấu hoặc mất mát. Không nên phô trương.",
+    congdanh: "Sự nghiệp bị áp bức, không được công nhận. Cần ẩn mình chờ thời.",
+    honnhan: "Hôn nhân bị áp lực từ bên ngoài, cần bảo vệ nhau.",
+    giacanh: "Gia đình đang trong giai đoạn khó khăn, u ám.",
+    congviec: "Phải ẩn mình, không phô trương tài năng lúc này.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Minh di mà bay, rủ cánh xuống, người quân tử lúc đi ba ngày không ăn." },
+      { ten: "Lục Nhị", text: "Minh di, bị thương ở đùi trái, dùng ngựa khoẻ mà cứu vớt, cát." },
+      { ten: "Cửu Tam", text: "Minh di ở phía nam đi săn, được thủ lĩnh lớn của nó." },
+      { ten: "Lục Tứ", text: "Vào bụng bên trái, lấy được tim của minh di, ra khỏi cổng và sân." },
+      { ten: "Lục Ngũ", text: "Minh di của Cơ Tử, lợi giữ chính." },
+      { ten: "Thượng Lục", text: "Không sáng mà tối, trước lên trời sau vào đất." },
+    ]
+  },
+  {
+    so: 37, glyph: "䷤", vi: "Phong Hoả Gia Nhân", cn: "風火家人", en: "The Family",
+    thuong: "Tốn (☴) Gió", ha: "Ly (☲) Lửa",
+    kw: "Gia đình · Nội trợ · Phân vai · Hoà thuận",
+    quality: "good",
+    image: `Gia Nhân là người trong gia đình, gia đình thuận hoà. Gió từ lửa mà ra, ám chỉ ảnh hưởng bắt đầu từ trong nhà ra ngoài xã hội.`,
+    tinhcam: "Tình cảm gắn bó như gia đình. Mối quan hệ ấm cúng, an toàn.",
+    suckhoe: "Sức khoẻ tốt khi có gia đình chăm sóc, môi trường ấm áp.",
+    tailoc: "Kinh doanh gia đình, doanh nghiệp gia đình rất phù hợp.",
+    congdanh: "Sự nghiệp tốt khi gắn liền với gia đình hoặc được gia đình ủng hộ.",
+    honnhan: "Hôn nhân rất tốt, gia đình hạnh phúc khi mỗi người hiểu rõ vai trò.",
+    giacanh: "Gia đình hoà thuận, mỗi người có trách nhiệm rõ ràng.",
+    congviec: "Phù hợp kinh doanh gia đình, quản lý gia đình, giáo dục.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Phòng giữ trong nhà, hối hận mất." },
+      { ten: "Lục Nhị", text: "Không có chỗ của nó mà đi, ở giữa mà ăn, chính tốt thì cát." },
+      { ten: "Cửu Tam", text: "Người nhà rầy rà, hối hận nguy mà cát. Vợ con cười đùa, cuối cùng xấu hổ." },
+      { ten: "Lục Tứ", text: "Làm giàu cho gia đình, đại cát." },
+      { ten: "Cửu Ngũ", text: "Vua đến nhà, chớ lo lắng, cát." },
+      { ten: "Thượng Cửu", text: "Có thành thật uy nghiêm, cuối cùng cát." },
+    ]
+  },
+  {
+    so: 38, glyph: "䷥", vi: "Hoả Trạch Khuê", cn: "火澤睽", en: "Opposition",
+    thuong: "Ly (☲) Lửa", ha: "Đoài (☱) Ao",
+    kw: "Bất đồng · Xa cách · Trái ngược · Dị biệt",
+    quality: "bad",
+    image: `Khuê là bất đồng, trái ngược nhau. Lửa bốc lên, nước chảy xuống, hai thứ khác hướng. Tượng hai người tuy xa nhau nhưng vẫn có điểm chung nhỏ.`,
+    tinhcam: "Tình cảm có nhiều bất đồng, mâu thuẫn. Hai người không hiểu nhau, hay cãi vã.",
+    suckhoe: "Sức khoẻ có bất ổn, tâm lý khó chịu. Chú ý tim mạch, mắt.",
+    tailoc: "Tài chính có bất đồng với đối tác. Khó hợp tác.",
+    congdanh: "Sự nghiệp gặp ganh ghét, bất đồng quan điểm với cấp trên.",
+    honnhan: "Hôn nhân nhiều bất đồng, cần tìm điểm chung để duy trì.",
+    giacanh: "Gia đình có bất đồng, xung đột.",
+    congviec: "Tránh những quyết định lớn khi có bất đồng với đối tác.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Hối hận mất, mất ngựa, chớ đuổi, tự về, thấy người xấu, không có lỗi." },
+      { ten: "Cửu Nhị", text: "Gặp chủ ở ngõ hẻm, không có lỗi." },
+      { ten: "Lục Tam", text: "Thấy xe bị kéo, bò của nó bị ngăn, người của nó xăm đầu cắt mũi, không đầu mối mà cuối cùng tốt." },
+      { ten: "Cửu Tứ", text: "Khuê cô đơn, gặp người tốt, giao tiếp thành thật, nguy mà không có lỗi." },
+      { ten: "Lục Ngũ", text: "Hối hận mất, tổ tiên cắn da, đi thì sao có lỗi?" },
+      { ten: "Thượng Cửu", text: "Khuê cô đơn, thấy lợn mang bùn, chở xe ma, trước kéo cung sau buông, không phải kẻ cướp mà là cầu hôn, đi thì gặp mưa thì cát." },
+    ]
+  },
+  {
+    so: 39, glyph: "䷦", vi: "Thuỷ Sơn Kiển", cn: "水山蹇", en: "Obstruction",
+    thuong: "Khảm (☵) Nước", ha: "Cấn (☶) Núi",
+    kw: "Trở ngại · Khó khăn · Chân跛 · Nhờ người",
+    quality: "bad",
+    image: `Kiển là đi khó, trở ngại. Núi chắn trước, nước hiểm sau. Người đi bị跛 chân. Cần nhờ người giúp, không thể một mình vượt qua.`,
+    tinhcam: "Tình cảm nhiều trở ngại, khó tiến lên. Cần kiên nhẫn và nhờ sự giúp đỡ.",
+    suckhoe: "Sức khoẻ gặp khó khăn, bệnh tật khó chữa. Cần chuyên gia hỗ trợ.",
+    tailoc: "Tài chính gặp nhiều trở ngại, khó thu hồi vốn.",
+    congdanh: "Sự nghiệp bế tắc, nhiều rào cản. Cần quý nhân giúp đỡ.",
+    honnhan: "Hôn nhân có nhiều trở ngại từ bên ngoài, từ gia đình hai bên.",
+    giacanh: "Gia cảnh khó khăn, đường đi trắc trở.",
+    congviec: "Cần tìm người hỗ trợ, đừng một mình vượt khó.",
+    haos: [
+      { ten: "Sơ Lục", text: "Đi thì kiển, đến thì khen ngợi." },
+      { ten: "Lục Nhị", text: "Vua thần kiển kiển, không phải vì thân mình." },
+      { ten: "Cửu Tam", text: "Đi thì kiển, đến thì quay về." },
+      { ten: "Lục Tứ", text: "Đi thì kiển, đến thì liên kết." },
+      { ten: "Cửu Ngũ", text: "Đại kiển, bằng hữu đến." },
+      { ten: "Thượng Lục", text: "Đi thì kiển, đến thì vĩ đại, cát, lợi thấy đại nhân." },
+    ]
+  },
+  {
+    so: 40, glyph: "䷧", vi: "Lôi Thuỷ Giải", cn: "雷水解", en: "Deliverance",
+    thuong: "Chấn (☳) Sấm", ha: "Khảm (☵) Nước",
+    kw: "Giải thoát · Tháo gỡ · Phóng thích · Tha thứ",
+    quality: "good",
+    image: `Giải là tháo gỡ, giải thoát. Sấm mưa sau mùa đông, vạn vật được giải phóng. Tượng trút bỏ gánh nặng, tha thứ, bước sang trang mới.`,
+    tinhcam: "Tình cảm được giải phóng khỏi ràng buộc. Cơ hội làm mới mối quan hệ.",
+    suckhoe: "Sức khoẻ đang được chữa lành, căn bệnh dần qua đi.",
+    tailoc: "Tài chính được tháo gỡ khó khăn, nợ nần được giải quyết.",
+    congdanh: "Sự nghiệp được giải phóng khỏi bế tắc, cơ hội mới xuất hiện.",
+    honnhan: "Tha thứ và giải phóng nhau, hôn nhân được hồi sinh.",
+    giacanh: "Gia cảnh thoát khỏi khó khăn, không khí nhẹ nhàng hơn.",
+    congviec: "Thời điểm tốt để giải quyết tồn đọng, bắt đầu lại.",
+    haos: [
+      { ten: "Sơ Lục", text: "Không có lỗi." },
+      { ten: "Cửu Nhị", text: "Giải bắt ba con cáo trên đồng, đạt tên vàng, chính tốt thì cát." },
+      { ten: "Lục Tam", text: "Gánh nặng mà cưỡi, cũng khiến giặc đến, chính thì xấu hổ." },
+      { ten: "Cửu Tứ", text: "Giải ngón chân cái của ngươi, bằng hữu đến, với thành thật." },
+      { ten: "Lục Ngũ", text: "Người quân tử chỉ có giải, cát, có thành thật với tiểu nhân." },
+      { ten: "Thượng Lục", text: "Công hầu bắn cắt con chim ưng trên tường cao, không gì không lợi." },
+    ]
+  },
+  {
+    so: 41, glyph: "䷨", vi: "Sơn Trạch Tổn", cn: "山澤損", en: "Decrease",
+    thuong: "Cấn (☶) Núi", ha: "Đoài (☱) Ao",
+    kw: "Giảm bớt · Hy sinh · Tiết kiệm · Cho đi",
+    quality: "mixed",
+    image: `Tổn là giảm bớt, hy sinh. Dưới giảm bớt để bổ sung cho trên. Cho đi không mất đi mà được phước lành.`,
+    tinhcam: "Tình cảm cần hy sinh, nhường nhịn. Cho đi yêu thương để nhận lại nhiều hơn.",
+    suckhoe: "Cần giảm bớt ăn uống, tiết chế. Bỏ thói quen xấu.",
+    tailoc: "Giai đoạn cần tiết kiệm, giảm chi tiêu. Đầu tư vào tương lai.",
+    congdanh: "Cần giảm bớt tự ngã, học cách khiêm tốn để tiến lên.",
+    honnhan: "Hôn nhân cần hy sinh, nhường nhịn. Cho nhiều hơn nhận.",
+    giacanh: "Gia đình cần tiết kiệm, cắt giảm lãng phí.",
+    congviec: "Cần giảm bớt một số mảng để tập trung vào việc quan trọng.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Đã làm xong việc, đi mau, không có lỗi, bàn xét thiệt hơn." },
+      { ten: "Cửu Nhị", text: "Lợi chính tốt, đi thì hung. Không tổn thương mà thêm nó." },
+      { ten: "Lục Tam", text: "Ba người đi thì mất một người, một người đi thì được bạn đồng hành." },
+      { ten: "Lục Tứ", text: "Giảm bớt bệnh của nó, khiến tươi vui, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Có thể thêm mười cặp rùa, không thể trái lại, đại cát." },
+      { ten: "Thượng Cửu", text: "Không tổn thương mà thêm nó, không có lỗi, chính tốt thì cát, lợi đi đâu đó, đạt tôi tớ mà không có nhà." },
+    ]
+  },
+  {
+    so: 42, glyph: "䷩", vi: "Phong Lôi Ích", cn: "風雷益", en: "Increase",
+    thuong: "Tốn (☴) Gió", ha: "Chấn (☳) Sấm",
+    kw: "Tăng trưởng · Thêm vào · Lợi ích · Phát triển",
+    quality: "good",
+    image: `Ích là thêm vào, tăng trưởng, có lợi. Trên giảm bớt để thêm cho dưới. Đây là quẻ của sự phát triển, cải thiện toàn diện.`,
+    tinhcam: "Tình cảm ngày càng sâu đậm hơn, thêm thắm thiết. Rất tốt.",
+    suckhoe: "Sức khoẻ được cải thiện, hồi phục tốt. Dinh dưỡng đầy đủ.",
+    tailoc: "Tài lộc tăng trưởng, thu nhập nhiều hơn chi. Đầu tư sinh lời.",
+    congdanh: "Sự nghiệp phát triển mạnh, được thêm quyền lực và trách nhiệm.",
+    honnhan: "Hôn nhân ngày càng tốt đẹp hơn, gia đình phát triển.",
+    giacanh: "Gia cảnh ngày càng thịnh vượng.",
+    congviec: "Mọi công việc đều đang phát triển tốt, thêm nhiều lợi ích.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Lợi thực hiện sự nghiệp lớn, đại cát, không có lỗi." },
+      { ten: "Lục Nhị", text: "Có thể thêm mười cặp rùa, không thể trái lại, thường chính tốt thì cát. Vua dùng thông đạt thiên đế, cát." },
+      { ten: "Lục Tam", text: "Thêm vào việc hung, không có lỗi, có thành thật hành trung, báo cho công dùng ngọc khuê." },
+      { ten: "Lục Tứ", text: "Hành trung, báo cho công tuân, lợi dựa vào dời kinh đô." },
+      { ten: "Cửu Ngũ", text: "Có thành thật mà lòng nhân, chớ hỏi, đại cát, có thành thật mà nhân ái thì đức của ta." },
+      { ten: "Thượng Cửu", text: "Không thêm vào mà tấn công nó, lập tâm không thường, hung." },
+    ]
+  },
+  {
+    so: 43, glyph: "䷪", vi: "Trạch Thiên Quải", cn: "澤天夬", en: "Breakthrough",
+    thuong: "Đoài (☱) Ao", ha: "Càn (☰) Trời",
+    kw: "Quyết đoán · Phán xét · Đột phá · Dứt khoát",
+    quality: "mixed",
+    image: `Quải là quyết đoán, phán xét. Nước tràn lên trên trời, sắp vỡ bờ. Tượng người quyết đoán diệt trừ cái xấu, nhưng cần cẩn thận không dùng bạo lực.`,
+    tinhcam: "Cần quyết đoán giải quyết vấn đề tình cảm. Nói thẳng nói thật, không úp mở.",
+    suckhoe: "Bệnh cần điều trị dứt điểm. Phẫu thuật hoặc điều trị mạnh tay nếu cần.",
+    tailoc: "Cần quyết định dứt khoát với tài chính. Cắt lỗ hoặc đầu tư mạnh.",
+    congdanh: "Thời điểm quyết đoán, đột phá trong sự nghiệp.",
+    honnhan: "Cần quyết định rõ ràng về tương lai hôn nhân.",
+    giacanh: "Gia đình cần giải quyết triệt để vấn đề tồn đọng.",
+    congviec: "Ra quyết định dứt khoát, không do dự.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Tráng ở ngón chân trước, đi mà không thắng thì có lỗi." },
+      { ten: "Cửu Nhị", text: "Hoảng sợ mà kêu la, chiều tối có quân tốt, chớ lo lắng." },
+      { ten: "Cửu Tam", text: "Tráng ở xương gò má, có hung. Người quân tử quải quải, một mình đi gặp mưa, nhớp nháp mà không vui, không có lỗi." },
+      { ten: "Cửu Tứ", text: "Mông không có da, hành đi khó khăn. Dắt dê đi hối hận mất, nghe lời không tin." },
+      { ten: "Cửu Ngũ", text: "Rau mọc như quyết đoán, quyết đoán mà hành đi, không có lỗi." },
+      { ten: "Thượng Lục", text: "Không kêu mà có hung." },
+    ]
+  },
+  {
+    so: 44, glyph: "䷫", vi: "Thiên Phong Cấu", cn: "天風姤", en: "Coming to Meet",
+    thuong: "Càn (☰) Trời", ha: "Tốn (☴) Gió",
+    kw: "Gặp gỡ · Cơ hội · Cám dỗ · Bất ngờ",
+    quality: "mixed",
+    image: `Cấu là gặp gỡ bất ngờ. Một hào âm xuất hiện dưới 5 hào dương. Tượng phụ nữ mạnh mẽ bất ngờ, hoặc cơ hội/cám dỗ bất ngờ.`,
+    tinhcam: "Tình cảm có gặp gỡ bất ngờ, cơ duyên đến đột ngột. Nhưng cần cẩn thận cám dỗ.",
+    suckhoe: "Chú ý bệnh tình cờ, không ngờ. Đặc biệt về phụ nữ.",
+    tailoc: "Cơ hội kiếm tiền đến bất ngờ, nhưng cũng có thể là bẫy.",
+    congdanh: "Có cơ hội bất ngờ trong sự nghiệp. Nắm lấy nhưng thận trọng.",
+    honnhan: "Có thể gặp người thứ ba trong hôn nhân. Cẩn thận ngoại tình.",
+    giacanh: "Gia đình có người lạ hoặc vấn đề bất ngờ.",
+    congviec: "Cơ hội bất ngờ xuất hiện, cần đánh giá kỹ trước khi quyết định.",
+    haos: [
+      { ten: "Sơ Lục", text: "Buộc vào trục sắt, chính tốt thì cát, đi thì xấu, lợn gầy thực ra vùng vẫy." },
+      { ten: "Cửu Nhị", text: "Bọc cá, không có lỗi, không lợi cho khách." },
+      { ten: "Cửu Tam", text: "Mông không có da, hành đi khó khăn, nguy không có lỗi lớn." },
+      { ten: "Cửu Tứ", text: "Bọc không có cá, dậy thì hung." },
+      { ten: "Cửu Ngũ", text: "Dùng lá liễu bọc dưa, hàm chứa chương, có điều rơi xuống từ trời." },
+      { ten: "Thượng Cửu", text: "Gặp sừng của nó, xấu hổ, không có lỗi." },
+    ]
+  },
+  {
+    so: 45, glyph: "䷬", vi: "Trạch Địa Tuỵ", cn: "澤地萃", en: "Gathering Together",
+    thuong: "Đoài (☱) Ao", ha: "Khôn (☷) Đất",
+    kw: "Tụ hội · Đoàn tụ · Thu thập · Hội họp",
+    quality: "good",
+    image: `Tuỵ là tụ họp, đoàn tụ. Nước trên đất, tụ lại thành ao. Tượng người người tụ hội, lễ hội, hội họp lớn.`,
+    tinhcam: "Tình cảm có cơ hội gặp gỡ, tụ hội. Dễ tìm được người phù hợp.",
+    suckhoe: "Sức khoẻ tốt khi có môi trường xã hội tích cực.",
+    tailoc: "Tài chính tốt khi tụ hội vốn, góp vốn nhiều người.",
+    congdanh: "Sự nghiệp tốt trong môi trường đông người, sự kiện lớn.",
+    honnhan: "Đoàn tụ gia đình, hội họp vui vẻ. Thích hợp lễ cưới.",
+    giacanh: "Gia đình đoàn tụ, lễ hội, mọi người về đông đủ.",
+    congviec: "Phù hợp tổ chức sự kiện, quản lý cộng đồng, bán hàng.",
+    haos: [
+      { ten: "Sơ Lục", text: "Có thành thật mà không đến cùng, thì loạn rồi lại tụ hội. Nếu kêu thì một bàn tay cười, chớ lo, đi thì không có lỗi." },
+      { ten: "Lục Nhị", text: "Kéo nhau thì cát không có lỗi, có thành thật mà lợi dùng thước hào." },
+      { ten: "Lục Tam", text: "Tụ mà than thở, không có gì lợi, đi không có lỗi, xấu hổ nhỏ." },
+      { ten: "Cửu Tứ", text: "Đại cát, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Tuỵ có ngôi, không có lỗi, không có thành thật, đó là lâu năm chính tốt, hối hận mất." },
+      { ten: "Thượng Lục", text: "Thở dài khóc lóc, không có lỗi." },
+    ]
+  },
+  {
+    so: 46, glyph: "䷭", vi: "Địa Phong Thăng", cn: "地風升", en: "Pushing Upward",
+    thuong: "Khôn (☷) Đất", ha: "Tốn (☴) Gió",
+    kw: "Thăng tiến · Vươn lên · Từng bước · Cây mọc",
+    quality: "good",
+    image: `Thăng là vươn lên, thăng tiến. Cây mọc trong đất, từng bước vươn lên trời. Tượng người từng bước kiên trì leo lên đỉnh cao.`,
+    tinhcam: "Tình cảm đang phát triển dần dần từ nhỏ đến lớn. Kiên trì và vun đắp.",
+    suckhoe: "Sức khoẻ đang cải thiện dần. Kiên trì tập luyện sẽ thấy hiệu quả.",
+    tailoc: "Tài chính đang tăng dần từ từ nhưng chắc chắn.",
+    congdanh: "Sự nghiệp thăng tiến từng bước, kiên trì sẽ đến đỉnh.",
+    honnhan: "Hôn nhân phát triển tốt khi hai người cùng nhau vươn lên.",
+    giacanh: "Gia cảnh ngày càng phát triển, thế hệ sau tốt hơn thế hệ trước.",
+    congviec: "Phù hợp sự nghiệp dài hạn, đầu tư dài hạn.",
+    haos: [
+      { ten: "Sơ Lục", text: "Thăng lên được tin, đại cát." },
+      { ten: "Cửu Nhị", text: "Có thành thật mà lợi dùng thước hào, không có lỗi." },
+      { ten: "Cửu Tam", text: "Thăng vào ấp trống." },
+      { ten: "Lục Tứ", text: "Vua dùng thông đạt núi Kỳ, cát, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Chính tốt thì cát, thăng bậc thang." },
+      { ten: "Thượng Lục", text: "Thăng trong tối tăm, lợi không nghỉ mà chính." },
+    ]
+  },
+  {
+    so: 47, glyph: "䷮", vi: "Trạch Thuỷ Khốn", cn: "澤水困", en: "Oppression",
+    thuong: "Đoài (☱) Ao", ha: "Khảm (☵) Nước",
+    kw: "Khốn khổ · Nghèo nàn · Tù túng · Gian nan",
+    quality: "bad",
+    image: `Khốn là khốn khổ, tù túng. Nước chảy xuống dưới ao, ao cạn. Tượng người quân tử trong hoàn cảnh cực khó khăn nhưng vẫn giữ chí.`,
+    tinhcam: "Tình cảm đang ở trong hoàn cảnh khó khăn, tù túng. Cần kiên nhẫn.",
+    suckhoe: "Sức khoẻ suy kiệt, tinh thần xuống thấp. Cần chăm sóc đặc biệt.",
+    tailoc: "Tài chính cực kỳ khó khăn, nghèo nàn. Chú ý trộm cướp.",
+    congdanh: "Sự nghiệp đang trong giai đoạn tối tăm nhất. Nhưng người quân tử không bỏ chí.",
+    honnhan: "Hôn nhân đang khốn khổ, áp lực từ mọi phía.",
+    giacanh: "Gia cảnh nghèo nàn, khó khăn trầm trọng.",
+    congviec: "Không nên mở rộng, chỉ tập trung giữ những gì đang có.",
+    haos: [
+      { ten: "Sơ Lục", text: "Mông ngồi trên cây đổ, vào trong hang tối, ba năm không gặp." },
+      { ten: "Cửu Nhị", text: "Khốn trong rượu thịt, áo đỏ mới đến, lợi dùng tế tự, đi thì hung, không có lỗi." },
+      { ten: "Lục Tam", text: "Khốn trong đá, tựa vào gai góc, vào trong cung không thấy vợ, hung." },
+      { ten: "Cửu Tứ", text: "Đến chầm chậm, khốn trong xe vàng, xấu hổ mà có chung cuộc." },
+      { ten: "Cửu Ngũ", text: "Mũi tai bị chặt, khốn trong áo đỏ quan, từ từ có vui, lợi dùng tế tự." },
+      { ten: "Thượng Lục", text: "Khốn trong dây leo, trong chỗ bất định, nói rằng hối hận thì hối hận, có hối hận thì cát đi." },
+    ]
+  },
+  {
+    so: 48, glyph: "䷯", vi: "Thuỷ Phong Tỉnh", cn: "水風井", en: "The Well",
+    thuong: "Khảm (☵) Nước", ha: "Tốn (☴) Gió",
+    kw: "Giếng nước · Nguồn lực · Nuôi dưỡng · Không thay đổi",
+    quality: "good",
+    image: `Tỉnh là giếng nước, nguồn lực không bao giờ cạn. Ấp thay đổi nhưng giếng không thay đổi. Tượng tài năng, đức hạnh bền vững phục vụ nhân loại.`,
+    tinhcam: "Tình cảm như giếng nước trong lành, ổn định, nuôi dưỡng lâu dài.",
+    suckhoe: "Sức khoẻ ổn định như nguồn nước ngầm. Cần bổ sung nước đầy đủ.",
+    tailoc: "Tài chính ổn định, nguồn thu ổn định như giếng nước.",
+    congdanh: "Tài năng như giếng nước, cần được khai thác đúng cách.",
+    honnhan: "Hôn nhân bền vững, ổn định, nuôi dưỡng lẫn nhau.",
+    giacanh: "Gia đình có truyền thống tốt đẹp, nguồn lực bền vững.",
+    congviec: "Phù hợp công việc cung cấp dịch vụ, tài nguyên, giáo dục.",
+    haos: [
+      { ten: "Sơ Lục", text: "Giếng bùn không uống được, không có thú nào đến giếng cũ." },
+      { ten: "Cửu Nhị", text: "Giếng nhỏ bắn cá, bình vỡ bị rò rỉ." },
+      { ten: "Cửu Tam", text: "Giếng múc mà không uống, làm lòng ta ưu sầu, có thể dùng khi vua sáng suốt, cùng nhận phúc." },
+      { ten: "Lục Tứ", text: "Giếng lát gạch, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Giếng lạnh trong, uống được." },
+      { ten: "Thượng Lục", text: "Giếng múc không đậy, có thành thật, đại cát." },
+    ]
+  },
+  {
+    so: 49, glyph: "䷰", vi: "Trạch Hoả Cách", cn: "澤火革", en: "Revolution",
+    thuong: "Đoài (☱) Ao", ha: "Ly (☲) Lửa",
+    kw: "Cách mạng · Thay đổi · Đổi mới · Lột xác",
+    quality: "good",
+    image: `Cách là thay đổi, cách mạng. Lửa trong ao, hai thứ tranh nhau, tạo ra biến đổi lớn. Tượng cách mạng, thay đổi căn bản.`,
+    tinhcam: "Tình cảm có thể thay đổi lớn. Đổi mới mối quan hệ hoặc bắt đầu trang mới.",
+    suckhoe: "Cần thay đổi lối sống, chế độ ăn uống, thói quen. Đổi mới để khoẻ hơn.",
+    tailoc: "Thay đổi chiến lược tài chính. Đổi ngành nghề hoặc hướng đầu tư.",
+    congdanh: "Sự nghiệp cần cải cách lớn. Cách mạng trong công việc.",
+    honnhan: "Hôn nhân cần thay đổi, làm mới lại. Tránh rơi vào nhàm chán.",
+    giacanh: "Gia cảnh cần cải cách, đổi mới để tiến lên.",
+    congviec: "Thời điểm tốt để thay đổi nghề nghiệp, tái cơ cấu.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Buộc bằng da vàng." },
+      { ten: "Lục Nhị", text: "Ngày của nó mà thay đổi, đi thì cát, không có lỗi." },
+      { ten: "Cửu Tam", text: "Đi thì hung, chính thì nguy. Cách ngôn ba lần rồi mới được tin." },
+      { ten: "Cửu Tứ", text: "Hối hận mất, có thành thật thì thay đổi mệnh, cát." },
+      { ten: "Cửu Ngũ", text: "Đại nhân hổ thay đổi, chưa chiêm mà có thành thật." },
+      { ten: "Thượng Lục", text: "Người quân tử báo thay đổi, tiểu nhân cách mặt. Đi thì hung, ở lại chính tốt thì cát." },
+    ]
+  },
+  {
+    so: 50, glyph: "䷱", vi: "Hoả Phong Đỉnh", cn: "火風鼎", en: "The Cauldron",
+    thuong: "Ly (☲) Lửa", ha: "Tốn (☴) Gió",
+    kw: "Đỉnh cao · Nuôi dưỡng · Thánh thiện · Văn minh",
+    quality: "good",
+    image: `Đỉnh là vạc nấu, tượng trưng văn minh cao nhất. Gió giúp lửa nấu vạc, nuôi dưỡng hiền tài. Đây là quẻ của thánh nhân, văn hoá đỉnh cao.`,
+    tinhcam: "Tình cảm tinh tế, cao quý. Mối quan hệ được xây dựng trên nền tảng văn hoá.",
+    suckhoe: "Sức khoẻ tốt khi ăn uống đủ chất, nuôi dưỡng tốt.",
+    tailoc: "Tài chính phong phú, đặc biệt từ ngành ẩm thực, văn hoá.",
+    congdanh: "Sự nghiệp đỉnh cao, được cống hiến cho xã hội.",
+    honnhan: "Hôn nhân cao quý, được xây dựng trên văn hoá và tôn trọng.",
+    giacanh: "Gia đình văn hoá cao, được xã hội kính trọng.",
+    congviec: "Phù hợp ẩm thực, văn hoá, nghệ thuật, giáo dục bậc cao.",
+    haos: [
+      { ten: "Sơ Lục", text: "Đỉnh lật chân, lợi ra cái xấu, lấy thiếp vì có con trai, không có lỗi." },
+      { ten: "Cửu Nhị", text: "Đỉnh có thức ăn, bạn bè của ta bệnh, không thể đến ta, cát." },
+      { ten: "Cửu Tam", text: "Tai đỉnh bị cách, hành vi bị cản, mỡ phao tử không ăn được, mưa giảm hối hận, cuối cùng cát." },
+      { ten: "Cửu Tứ", text: "Đỉnh gãy chân, úp đổ thức ăn công hầu, hình thể bị ướt, hung." },
+      { ten: "Lục Ngũ", text: "Đỉnh có tai vàng kim mũi, lợi chính tốt." },
+      { ten: "Thượng Cửu", text: "Đỉnh có vòng ngọc, đại cát, không gì không lợi." },
+    ]
+  },
+  {
+    so: 51, glyph: "䷲", vi: "Thuần Chấn", cn: "震為雷", en: "The Arousing",
+    thuong: "Chấn (☳) Sấm", ha: "Chấn (☳) Sấm",
+    kw: "Sấm sét · Chấn động · Kinh sợ · Thức tỉnh",
+    quality: "mixed",
+    image: `Thuần Chấn là sấm chồng sấm, chấn động liên tiếp. Sấm nổ thức tỉnh vạn vật. Tượng người biết sợ hãi trước thiên nhiên mà tu sửa mình.`,
+    tinhcam: "Tình cảm có biến động bất ngờ. Cần bình tĩnh đối phó.",
+    suckhoe: "Sức khoẻ có thể bị chấn thương bất ngờ. Chú ý gan, chân.",
+    tailoc: "Tài chính có biến động lớn. Cẩn thận các cú sốc bất ngờ.",
+    congdanh: "Sự nghiệp có biến động. Có thể là bước ngoặt tốt hoặc xấu.",
+    honnhan: "Hôn nhân có chấn động, cần bình tĩnh giải quyết.",
+    giacanh: "Gia đình có biến cố bất ngờ cần đối phó.",
+    congviec: "Chuẩn bị cho những thay đổi bất ngờ trong công việc.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Sấm đến âm âm, sau cười nói hây hây, cát." },
+      { ten: "Lục Nhị", text: "Sấm đến nguy, ức triệu tiền mà mất, lên chín gò, chớ đuổi, ngày thứ bảy tất lấy được." },
+      { ten: "Lục Tam", text: "Sấm hồi hộp, sấm hành đi mà không mất." },
+      { ten: "Cửu Tứ", text: "Sấm sa lầy." },
+      { ten: "Lục Ngũ", text: "Sấm đi lại, nguy, không mất mà có việc." },
+      { ten: "Thượng Lục", text: "Sấm cuốn cuốn, nhìn sợ hãi, đi thì hung. Sấm không ở ta mà ở hàng xóm, không có lỗi, hôn nhân có lời." },
+    ]
+  },
+  {
+    so: 52, glyph: "䷳", vi: "Thuần Cấn", cn: "艮為山", en: "Keeping Still",
+    thuong: "Cấn (☶) Núi", ha: "Cấn (☶) Núi",
+    kw: "Dừng lại · Thiền định · Bất động · Tĩnh tâm",
+    quality: "good",
+    image: `Thuần Cấn là núi chồng núi, tĩnh tại. Biết dừng lại đúng lúc là trí tuệ. Tượng thiền định, tĩnh tâm, bất động như núi.`,
+    tinhcam: "Tình cảm cần dừng lại, bình tĩnh suy nghĩ. Đừng vội vàng.",
+    suckhoe: "Nghỉ ngơi là phương thuốc tốt nhất. Thiền định, yoga có lợi.",
+    tailoc: "Dừng lại, quan sát thị trường trước khi đầu tư tiếp.",
+    congdanh: "Dừng lại đúng lúc để suy ngẫm, không nên tiến liên tục.",
+    honnhan: "Trong hôn nhân, đôi khi im lặng và yên tĩnh là quan trọng.",
+    giacanh: "Gia đình cần khoảng lặng, không khí tĩnh lặng.",
+    congviec: "Thời điểm tốt để thiền định, nghiên cứu, học tập.",
+    haos: [
+      { ten: "Sơ Lục", text: "Dừng ngón chân, không có lỗi, lợi thường xuyên chính tốt." },
+      { ten: "Lục Nhị", text: "Dừng ống chân, không cứu được mà đuổi theo, lòng không vui." },
+      { ten: "Cửu Tam", text: "Dừng hông, liệt lưng, nguy xông khói tim." },
+      { ten: "Lục Tứ", text: "Dừng thân, không có lỗi." },
+      { ten: "Lục Ngũ", text: "Dừng má, lời nói có thứ tự, hối hận mất." },
+      { ten: "Thượng Cửu", text: "Đôn hậu dừng, cát." },
+    ]
+  },
+  {
+    so: 53, glyph: "䷴", vi: "Phong Sơn Tiệm", cn: "風山漸", en: "Development",
+    thuong: "Tốn (☴) Gió", ha: "Cấn (☶) Núi",
+    kw: "Tiệm tiến · Từng bước · Hôn nhân · Tự nhiên",
+    quality: "good",
+    image: `Tiệm là tiến dần, từng bước một. Cây cối mọc trên núi từng ngày cao thêm. Tượng chim hồng di trú từng chặng. Hôn nhân tiến hành theo đúng lễ nghi.`,
+    tinhcam: "Tình cảm tiến dần theo thứ tự, không vội vàng. Rất tốt cho hôn nhân đúng lễ.",
+    suckhoe: "Sức khoẻ hồi phục từng bước, không thể nóng vội.",
+    tailoc: "Tài chính tăng trưởng dần dần, ổn định và bền vững.",
+    congdanh: "Sự nghiệp phát triển theo đúng quy trình, không đốt cháy giai đoạn.",
+    honnhan: "Quẻ rất tốt cho hôn nhân! Tiến hành đúng lễ nghi, từng bước thuận lợi.",
+    giacanh: "Gia cảnh phát triển tự nhiên, từng thế hệ tiến bộ hơn.",
+    congviec: "Phù hợp công việc cần quá trình, nghiên cứu dài hạn.",
+    haos: [
+      { ten: "Sơ Lục", text: "Hồng tiến về bờ, tiểu tử nguy, có lời, không có lỗi." },
+      { ten: "Lục Nhị", text: "Hồng tiến về tảng đá, ăn uống vui vẻ, cát." },
+      { ten: "Cửu Tam", text: "Hồng tiến về mặt đất, chồng đi không về, vợ mang thai không dưỡng, hung, lợi ngăn giặc." },
+      { ten: "Lục Tứ", text: "Hồng tiến về cây, hoặc đạt cành bằng phẳng, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Hồng tiến về gò, vợ ba năm không mang thai, cuối cùng không thắng, cát." },
+      { ten: "Thượng Cửu", text: "Hồng tiến về núi, lông có thể dùng làm nghi thức, cát." },
+    ]
+  },
+  {
+    so: 54, glyph: "䷵", vi: "Lôi Trạch Quy Muội", cn: "雷澤歸妹", en: "The Marrying Maiden",
+    thuong: "Chấn (☳) Sấm", ha: "Đoài (☱) Ao",
+    kw: "Hôn nhân · Lấy chồng · Không đúng phận · Cẩn trọng",
+    quality: "bad",
+    image: `Quy Muội là cô em gái lấy chồng. Nhưng không đúng vị trí, không đúng cách. Tượng hôn nhân vội vàng không đúng lễ, dễ gặp bất hạnh.`,
+    tinhcam: "Tình cảm vội vàng, không đúng thời điểm. Cẩn thận bị lợi dụng.",
+    suckhoe: "Chú ý sức khoẻ phụ nữ, sinh sản.",
+    tailoc: "Tài chính dễ gặp vấn đề do hành động vội vàng không suy nghĩ.",
+    congdanh: "Không nên xáo trộn vai trò, vị trí trong công việc.",
+    honnhan: "Hôn nhân vội vàng, không đúng phận, dễ gặp khó khăn.",
+    giacanh: "Gia đình có người lấy chồng sớm hoặc không đúng lễ.",
+    congviec: "Tránh nhảy vọt, vi phạm thứ tự trước sau.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Quy muội làm thiếp,跛 mà đi được, đi thì cát." },
+      { ten: "Cửu Nhị", text: "Mắt lé mà nhìn được, lợi ẩn dật người chính tốt." },
+      { ten: "Lục Tam", text: "Quy muội chờ mà sau quy, trở lại làm thiếp." },
+      { ten: "Cửu Tứ", text: "Quy muội quá kỳ, muộn mà quy có thời." },
+      { ten: "Lục Ngũ", text: "Đế Ất gả em gái, áo của người đẹp không bằng áo của thiếp, mặt trăng gần tròn, cát." },
+      { ten: "Thượng Lục", text: "Người nữ giơ giỏ không có quả, người nam đâm dê không có máu, không lợi." },
+    ]
+  },
+  {
+    so: 55, glyph: "䷶", vi: "Lôi Hoả Phong", cn: "雷火豐", en: "Abundance",
+    thuong: "Chấn (☳) Sấm", ha: "Ly (☲) Lửa",
+    kw: "Phồn thịnh · Rực rỡ · Đỉnh cao · Cực thịnh",
+    quality: "good",
+    image: `Phong là đỉnh cao của sự thịnh vượng. Sấm và Lửa cùng rực rỡ. Tượng thời đại cực thịnh, nhưng cực thịnh tất suy, cần biết điều này.`,
+    tinhcam: "Tình cảm ở đỉnh cao, nồng nàn, rực rỡ. Nhưng hãy trân trọng vì cực thịnh tất suy.",
+    suckhoe: "Sức khoẻ tốt nhất, tràn đầy sinh lực. Cần tận dụng.",
+    tailoc: "Tài lộc cực kỳ dồi dào. Đây là thời điểm giàu nhất.",
+    congdanh: "Sự nghiệp đỉnh cao chói lọi. Nhưng cần chuẩn bị cho giai đoạn sau.",
+    honnhan: "Hôn nhân ở giai đoạn đẹp nhất, hạnh phúc nhất.",
+    giacanh: "Gia cảnh cực kỳ thịnh vượng.",
+    congviec: "Thời điểm tốt nhất trong nghề nghiệp. Hãy tận dụng.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Gặp chủ nhân đồng đẳng, dù mười ngày không có lỗi, đi có khen ngợi." },
+      { ten: "Lục Nhị", text: "Phong che đàn của nó, nhìn bắc đẩu giữa ban ngày, đi thì đạt nghi ngờ bệnh, có thành thật mà phát ra thì cát." },
+      { ten: "Cửu Tam", text: "Phong ngăn trán của nó, nhìn bắc đẩu giữa ban ngày, gãy tay phải, không có lỗi." },
+      { ten: "Cửu Tứ", text: "Phong che đàn của nó, nhìn bắc đẩu giữa ban ngày, gặp chủ ngang hàng thì cát." },
+      { ten: "Lục Ngũ", text: "Đến chương, có khen ngợi cát." },
+      { ten: "Thượng Lục", text: "Phong nhà của nó, màn nhà của nó, nhìn vào cửa, yên lặng không có người, ba năm không thấy, hung." },
+    ]
+  },
+  {
+    so: 56, glyph: "䷷", vi: "Hoả Sơn Lữ", cn: "火山旅", en: "The Wanderer",
+    thuong: "Ly (☲) Lửa", ha: "Cấn (☶) Núi",
+    kw: "Du lịch · Lữ hành · Xa xứ · Tạm thời",
+    quality: "mixed",
+    image: `Lữ là lữ hành, đi xa, khách lữ hành. Lửa trên núi, đốm lửa di chuyển. Không nên ở lâu một chỗ, cần di chuyển nhưng cũng đừng mạo hiểm.`,
+    tinhcam: "Tình cảm bất ổn vì một người đi xa hoặc hai người không thể ở cùng nhau.",
+    suckhoe: "Sức khoẻ cần chú ý khi đi xa, thay đổi môi trường.",
+    tailoc: "Tài chính gắn với việc đi lại, buôn bán xa. Thu nhập bất ổn.",
+    congdanh: "Sự nghiệp liên quan đến đi xa, xuất ngoại có thể tốt.",
+    honnhan: "Một trong hai người thường xuyên đi xa, cần củng cố mối quan hệ.",
+    giacanh: "Gia đình có người đi xa, biệt ly.",
+    congviec: "Phù hợp du lịch, thương mại xa, xuất khẩu.",
+    haos: [
+      { ten: "Sơ Lục", text: "Lữ hành lủng củng lủng củng, tự lấy tai vạ đó." },
+      { ten: "Lục Nhị", text: "Lữ hành đến quán trọ, giữ tiền của mình, đạt tôi tớ trẻ mà chính tốt." },
+      { ten: "Cửu Tam", text: "Lữ hành đốt quán trọ, mất tôi tớ trẻ của nó, chính nguy." },
+      { ten: "Cửu Tứ", text: "Lữ hành ở nơi trú, đạt tiền rìu của nó, lòng ta không vui." },
+      { ten: "Lục Ngũ", text: "Bắn chim trĩ, mũi tên đơn mất, cuối cùng có khen ngợi." },
+      { ten: "Thượng Cửu", text: "Chim tổ bị đốt, lữ hành trước cười sau gào, mất bò ở chỗ dễ dàng, hung." },
+    ]
+  },
+  {
+    so: 57, glyph: "䷸", vi: "Thuần Tốn", cn: "巽為風", en: "The Gentle",
+    thuong: "Tốn (☴) Gió", ha: "Tốn (☴) Gió",
+    kw: "Nhu thuận · Khéo léo · Thẩm thấu · Khiêm cung",
+    quality: "good",
+    image: `Thuần Tốn là gió chồng gió, nhu thuận liên tiếp. Gió thổi vào mọi ngóc ngách. Tượng sự khéo léo len lỏi, thuyết phục bằng sự nhẹ nhàng.`,
+    tinhcam: "Tình cảm nhẹ nhàng, thấm sâu. Biết chiều ý người yêu một cách khéo léo.",
+    suckhoe: "Sức khoẻ cần chú ý phổi, hô hấp, gió lạnh.",
+    tailoc: "Tài chính tốt khi kinh doanh bằng sự khéo léo, kiên trì.",
+    congdanh: "Sự nghiệp tốt khi biết len lỏi, thích nghi, khéo léo.",
+    honnhan: "Hôn nhân tốt nhờ sự khéo léo, nhẹ nhàng.",
+    giacanh: "Gia đình hoà thuận nhờ mọi người biết nhường nhịn.",
+    congviec: "Phù hợp ngoại giao, PR, marketing, tư vấn.",
+    haos: [
+      { ten: "Sơ Lục", text: "Tiến rồi lùi, lợi dùng võ nhân chính tốt." },
+      { ten: "Cửu Nhị", text: "Tốn ở dưới giường, dùng sử thần thị, nhiều thì cát không có lỗi." },
+      { ten: "Cửu Tam", text: "Tốn thường xuyên, xấu hổ." },
+      { ten: "Lục Tứ", text: "Hối hận mất, bắt ba loại trong đồng." },
+      { ten: "Cửu Ngũ", text: "Chính tốt thì cát, hối hận mất, không lợi, không có đầu mà có chung cuộc. Trước canh ba ngày sau canh ba ngày, cát." },
+      { ten: "Thượng Cửu", text: "Tốn ở dưới giường, mất tiền rìu của nó, chính thì hung." },
+    ]
+  },
+  {
+    so: 58, glyph: "䷹", vi: "Thuần Đoài", cn: "兌為澤", en: "The Joyous",
+    thuong: "Đoài (☱) Ao", ha: "Đoài (☱) Ao",
+    kw: "Vui vẻ · Hân hoan · Ao nước · Niềm vui",
+    quality: "good",
+    image: `Thuần Đoài là ao chồng ao, vui vẻ hân hoan. Hai ao tiếp nối nuôi dưỡng nhau. Tượng niềm vui chân thật, sự giao tiếp vui vẻ.`,
+    tinhcam: "Tình cảm vui vẻ, hân hoan. Mối quan hệ đầy tiếng cười và hạnh phúc.",
+    suckhoe: "Tinh thần vui vẻ giúp sức khoẻ tốt. Cần chú ý miệng, họng.",
+    tailoc: "Tài chính tốt khi giao tiếp vui vẻ, khéo léo trong buôn bán.",
+    congdanh: "Sự nghiệp tốt khi biết giao tiếp, tạo không khí vui vẻ.",
+    honnhan: "Hôn nhân vui vẻ, tiếng cười nhiều. Rất tốt đẹp.",
+    giacanh: "Gia đình đầy tiếng cười, vui vẻ hoà thuận.",
+    congviec: "Phù hợp giao tiếp, bán hàng, giải trí, nghệ thuật.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Hoà mà đoài, cát." },
+      { ten: "Cửu Nhị", text: "Thành thật mà đoài, cát, hối hận mất." },
+      { ten: "Lục Tam", text: "Đến đoài, hung." },
+      { ten: "Cửu Tứ", text: "Thương lượng đoài chưa yên, có chỗ bệnh thì có vui." },
+      { ten: "Cửu Ngũ", text: "Thành thật mà bóc da, có nguy." },
+      { ten: "Thượng Lục", text: "Dẫn mà đoài." },
+    ]
+  },
+  {
+    so: 59, glyph: "䷺", vi: "Phong Thuỷ Hoán", cn: "風水渙", en: "Dispersion",
+    thuong: "Tốn (☴) Gió", ha: "Khảm (☵) Nước",
+    kw: "Tan rã · Phân tán · Hoà giải · Thông suốt",
+    quality: "mixed",
+    image: `Hoán là phân tán, tan rã. Gió thổi trên nước tạo ra sóng lan toả. Tượng tan ra để hội tụ lớn hơn. Đây là giai đoạn cần phá bỏ cái cũ, mở ra cái mới.`,
+    tinhcam: "Tình cảm có thể tan rã để bắt đầu lại. Hoặc giải toả được ràng buộc cũ.",
+    suckhoe: "Sức khoẻ cần giải toả stress, tâm lý. Thở gió tươi mát.",
+    tailoc: "Tài chính phân tán cần thu lại. Hoặc phân phối tiền vào nhiều hướng.",
+    congdanh: "Sự nghiệp có thể phân tán để mở rộng hơn.",
+    honnhan: "Có thể tan vỡ những ràng buộc cũ để làm mới. Hoặc xa nhau.",
+    giacanh: "Gia đình có thể chia xa để mỗi người phát triển riêng.",
+    congviec: "Thời điểm tốt để phân tán, mở rộng, liên kết nhiều nơi.",
+    haos: [
+      { ten: "Sơ Lục", text: "Dùng ngựa khoẻ mà cứu vớt, cát." },
+      { ten: "Cửu Nhị", text: "Hoán ra bàn của nó, hối hận mất." },
+      { ten: "Lục Tam", text: "Hoán thân của nó, không có hối hận." },
+      { ten: "Lục Tứ", text: "Hoán bầy của nó, đại cát. Hoán có gò, không phải nơi người thường nghĩ đến." },
+      { ten: "Cửu Ngũ", text: "Hoán mồ hôi tiếng kêu lớn của nó, hoán vua ở, không có lỗi." },
+      { ten: "Thượng Cửu", text: "Hoán máu của nó, đi tránh xa, không có lỗi." },
+    ]
+  },
+  {
+    so: 60, glyph: "䷻", vi: "Thuỷ Trạch Tiết", cn: "水澤節", en: "Limitation",
+    thuong: "Khảm (☵) Nước", ha: "Đoài (☱) Ao",
+    kw: "Tiết chế · Giới hạn · Kỷ luật · Điều độ",
+    quality: "good",
+    image: `Tiết là tiết chế, giới hạn. Nước trong ao có mực, vượt quá sẽ tràn. Tượng kỷ luật, quy tắc, điều độ là chìa khoá thành công.`,
+    tinhcam: "Tình cảm cần có giới hạn, kỷ luật. Đừng quá buông thả hoặc quá kiểm soát.",
+    suckhoe: "Sức khoẻ cần tiết chế ăn uống, sinh hoạt. Kỷ luật là sức khoẻ.",
+    tailoc: "Tài chính cần tiết kiệm, chi tiêu có kỷ luật. Lập ngân sách.",
+    congdanh: "Sự nghiệp phát triển nhờ kỷ luật và nguyên tắc rõ ràng.",
+    honnhan: "Hôn nhân cần quy tắc, giới hạn rõ ràng để bền vững.",
+    giacanh: "Gia đình cần kỷ luật, quy tắc nhất định.",
+    congviec: "Phù hợp quản lý, lập kế hoạch, kiểm soát.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Không ra khỏi cửa sân, không có lỗi." },
+      { ten: "Cửu Nhị", text: "Không ra khỏi cổng ngoài, hung." },
+      { ten: "Lục Tam", text: "Không tiết chế mà than thở, không có lỗi." },
+      { ten: "Lục Tứ", text: "An tiết, hanh." },
+      { ten: "Cửu Ngũ", text: "Cam tiết, cát, đi có khen ngợi." },
+      { ten: "Thượng Lục", text: "Khổ tiết, chính thì hung, hối hận mất." },
+    ]
+  },
+  {
+    so: 61, glyph: "䷼", vi: "Phong Trạch Trung Phu", cn: "風澤中孚", en: "Inner Truth",
+    thuong: "Tốn (☴) Gió", ha: "Đoài (☱) Ao",
+    kw: "Thành thật · Tín nghĩa · Nội tâm · Cảm hoá",
+    quality: "good",
+    image: `Trung Phu là thành thật từ nội tâm. Gió trên ao, ảnh hưởng thấu sâu. Tượng lòng thành cảm hoá người khác, cá trong ao nghe tiếng mà đến.`,
+    tinhcam: "Tình cảm chân thành, xuất phát từ trái tim. Không giả tạo, được đối phương cảm nhận.",
+    suckhoe: "Tâm lý ổn định, thành thật với bản thân giúp sức khoẻ tốt.",
+    tailoc: "Tài chính tốt khi làm ăn thành thật, được tin tưởng.",
+    congdanh: "Sự nghiệp tốt khi có uy tín, thành thật với mọi người.",
+    honnhan: "Hôn nhân dựa trên thành thật và tin tưởng, rất bền vững.",
+    giacanh: "Gia đình thành thật, tin tưởng nhau.",
+    congviec: "Phù hợp mọi ngành khi có uy tín và thành thật.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Chuẩn bị thì cát, có thứ khác thì không yên." },
+      { ten: "Cửu Nhị", text: "Hạc kêu trong bóng râm, con của nó họa theo. Ta có chén rượu ngon, ta cùng ngươi bình đổ nó." },
+      { ten: "Lục Tam", text: "Đạt đối kháng, hoặc đánh trống hoặc thôi, hoặc khóc hoặc ca." },
+      { ten: "Lục Tứ", text: "Trăng gần tròn, ngựa đôi mất, không có lỗi." },
+      { ten: "Cửu Ngũ", text: "Có thành thật mà kết nối, không có lỗi." },
+      { ten: "Thượng Cửu", text: "Tiếng gà bay lên trời, chính thì hung." },
+    ]
+  },
+  {
+    so: 62, glyph: "䷽", vi: "Lôi Sơn Tiểu Quá", cn: "雷山小過", en: "Small Exceeding",
+    thuong: "Chấn (☳) Sấm", ha: "Cấn (☶) Núi",
+    kw: "Nhỏ vượt · Quá mức nhỏ · Thận trọng · Vừa phải",
+    quality: "mixed",
+    image: `Tiểu Quá là vượt qua một chút, thái quá nhỏ. Chim bay không lên cao mà bay thấp. Tượng những điều nhỏ nên chú ý, không cần chú trọng điều lớn lúc này.`,
+    tinhcam: "Tình cảm quá mức chút ít, cần điều chỉnh. Đừng quá quan tâm hoặc quá lạnh nhạt.",
+    suckhoe: "Chú ý những bệnh nhỏ, đừng để trở thành lớn.",
+    tailoc: "Tài chính hơi quá mức, cần kiềm chế chi tiêu.",
+    congdanh: "Không nên làm việc lớn lúc này, chỉ nên việc nhỏ.",
+    honnhan: "Hôn nhân có những vấn đề nhỏ cần giải quyết.",
+    giacanh: "Gia đình có vài vấn đề nhỏ cần chú ý.",
+    congviec: "Chỉ nên làm việc vừa sức, không nên quá sức.",
+    haos: [
+      { ten: "Sơ Lục", text: "Chim bay, hung." },
+      { ten: "Lục Nhị", text: "Qua tổ tiên, gặp bà nội, không đến vua, gặp bề tôi, không có lỗi." },
+      { ten: "Cửu Tam", text: "Không quá phòng bị nó, có người theo mà giết, hung." },
+      { ten: "Cửu Tứ", text: "Không có lỗi, không qua gặp nó, đi thì nguy tất phải cẩn thận, chớ dùng thường xuyên mà chính tốt." },
+      { ten: "Lục Ngũ", text: "Mây dày không mưa, từ phía tây ta của nó, công hầu bắn được trong hang." },
+      { ten: "Thượng Lục", text: "Không gặp mà qua nó, chim bay xa mà hung, gọi là tai trời hoạ người." },
+    ]
+  },
+  {
+    so: 63, glyph: "䷾", vi: "Thuỷ Hoả Ký Tế", cn: "水火既濟", en: "After Completion",
+    thuong: "Khảm (☵) Nước", ha: "Ly (☲) Lửa",
+    kw: "Hoàn thành · Trật tự · Sau khi xong · Cảnh giác",
+    quality: "good",
+    image: `Ký Tế là đã hoàn thành, đã qua sông. Nước trên lửa, mọi thứ đúng vị trí. Tượng sự hoàn hảo nhưng ngay sau đỉnh là suy, cần cảnh giác.`,
+    tinhcam: "Tình cảm đã đến giai đoạn ổn định, hoàn thành. Nhưng đừng tự mãn.",
+    suckhoe: "Sức khoẻ vừa hồi phục xong. Cần duy trì cẩn thận.",
+    tailoc: "Tài chính đang ổn định. Nhưng cần cảnh giác, không tự mãn.",
+    congdanh: "Sự nghiệp đã đạt được mục tiêu. Cần đặt mục tiêu mới.",
+    honnhan: "Hôn nhân ổn định, đã xây dựng được. Cần duy trì.",
+    giacanh: "Gia cảnh đã ổn định. Giữ gìn thành quả.",
+    congviec: "Đã hoàn thành nhiệm vụ. Tiếp tục duy trì và phát triển.",
+    haos: [
+      { ten: "Sơ Cửu", text: "Cản bánh xe của nó, ướt đuôi của nó, không có lỗi." },
+      { ten: "Lục Nhị", text: "Người phụ nữ mất tấm màn, chớ đuổi, ngày thứ bảy tất lấy được." },
+      { ten: "Cửu Tam", text: "Cao Tông chinh phạt nước quỷ phương, ba năm thắng, tiểu nhân chớ dùng." },
+      { ten: "Lục Tứ", text: "Rách rưới có khăn liệm, suốt ngày lo lắng." },
+      { ten: "Cửu Ngũ", text: "Người đông cúng trâu không bằng người tây cúng lễ nhỏ, thực sự nhận phúc." },
+      { ten: "Thượng Lục", text: "Ướt đầu của nó, nguy." },
+    ]
+  },
+  {
+    so: 64, glyph: "䷿", vi: "Hoả Thuỷ Vị Tế", cn: "火水未濟", en: "Before Completion",
+    thuong: "Ly (☲) Lửa", ha: "Khảm (☵) Nước",
+    kw: "Chưa hoàn thành · Giao thoa · Tiếp tục · Hy vọng",
+    quality: "mixed",
+    image: `Vị Tế là chưa hoàn thành, chưa qua sông. Lửa trên nước, không hiệu quả. Nhưng đây là quẻ kết thúc Kinh Dịch với ý nghĩa: vạn vật không có điểm dừng, luôn tiếp tục.`,
+    tinhcam: "Tình cảm chưa đến hồi kết, còn nhiều điều chưa nói. Tiếp tục vun đắp.",
+    suckhoe: "Bệnh chưa khỏi hẳn. Cần tiếp tục điều trị kiên trì.",
+    tailoc: "Tài chính chưa ổn định, đang trong quá trình. Tiếp tục cố gắng.",
+    congdanh: "Sự nghiệp còn đang trên đường. Chưa đến đích nhưng đang tiến.",
+    honnhan: "Mối quan hệ còn đang trong quá trình xây dựng. Tiếp tục.",
+    giacanh: "Gia cảnh chưa hoàn toàn ổn định. Còn nhiều việc cần làm.",
+    congviec: "Công việc đang tiến hành. Kiên trì và tiếp tục.",
+    haos: [
+      { ten: "Sơ Lục", text: "Ướt đuôi của nó, xấu hổ." },
+      { ten: "Cửu Nhị", text: "Cản bánh xe của nó, chính tốt thì cát." },
+      { ten: "Lục Tam", text: "Chưa tế mà đi thì hung, lợi vượt sông lớn." },
+      { ten: "Cửu Tứ", text: "Chính tốt thì cát, hối hận mất. Rung động mà chinh phạt nước quỷ phương, ba năm có khen ngợi ở nước lớn." },
+      { ten: "Lục Ngũ", text: "Chính tốt thì cát, không hối hận, ánh sáng người quân tử có thành thật, cát." },
+      { ten: "Thượng Cửu", text: "Có thành thật mà uống rượu, không có lỗi, ướt đầu của nó, có thành thật mà mất thành thật." },
+    ]
+  }
+];
+
+// ================================================================
+// STATE
+let currentIdx = -1;
+let activeFilter = 'all';
+let activeCat = 'all';
+let searchTerm = '';
+
+// ================================================================
+// RENDER GRID
+function renderGrid() {
+  const grid = document.getElementById('queGrid');
+  const filtered = QUE_DATA.filter(q => {
+    const matchFilter =
+      activeFilter === 'all' ||
+      (activeFilter === 'good' && q.quality === 'good') ||
+      (activeFilter === 'bad' && q.quality === 'bad') ||
+      (activeFilter === 'mixed' && q.quality === 'mixed');
+    const matchSearch = searchTerm === '' ||
+      q.vi.toLowerCase().includes(searchTerm) ||
+      q.cn.includes(searchTerm) ||
+      String(q.so).includes(searchTerm) ||
+      q.kw.toLowerCase().includes(searchTerm) ||
+      q.en.toLowerCase().includes(searchTerm);
+    const matchCat = activeCat === 'all' || q[activeCat];
+    return matchFilter && matchSearch && matchCat;
+  });
+  document.getElementById('countSpan').textContent = filtered.length;
+  grid.innerHTML = filtered.map(q => `
+    <div class="card" onclick="openModal(${q.so - 1})">
+      <div class="card-inner">
+        <div class="card-number">${String(q.so).padStart(2,'0')}</div>
+        <div class="card-glyph">${q.glyph}</div>
+        <div class="card-body">
+          <div class="card-name-vi">${q.vi}</div>
+          <div class="card-name-cn">${q.cn} · ${q.en}</div>
+          <div class="card-keyword">${q.kw}</div>
+          <div class="card-trigrams">▲ ${q.thuong} &nbsp;|&nbsp; ▼ ${q.ha}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ================================================================
+// MODAL
+function openModal(idx) {
+  currentIdx = idx;
+  const q = QUE_DATA[idx];
+  document.getElementById('mGlyph').textContent = q.glyph;
+  document.getElementById('mNum').textContent = `QUẺ SỐ ${String(q.so).padStart(2,'0')} · ${q.quality === 'good' ? '▲ Cát' : q.quality === 'bad' ? '▼ Hung' : '◆ Bình'}`;
+  document.getElementById('mNameVi').textContent = q.vi;
+  document.getElementById('mNameCn').textContent = `${q.cn} · ${q.en}`;
+  const qColor = q.quality === 'good' ? 'tag-good' : q.quality === 'bad' ? 'tag-bad' : 'tag-neutral';
+  document.getElementById('mBody').innerHTML = `
+    <div class="modal-section">
+      <div class="section-label">Biểu tượng & Ý nghĩa</div>
+      <div class="taga-row">
+        <span class="tag ${qColor}">${q.quality === 'good' ? '▲ Cát – Tốt lành' : q.quality === 'bad' ? '▼ Hung – Không thuận' : '◆ Bình – Trung hoà'}</span>
+      </div>
+      <div class="trigram-display" style="margin-bottom:1rem">
+        <div class="trigram-item">
+          <span class="trigram-symbol">☲</span>
+          <div class="trigram-name">Thượng Quái<br>${q.thuong}</div>
+        </div>
+        <div class="trigram-item">
+          <span class="trigram-symbol">☱</span>
+          <div class="trigram-name">Hạ Quái<br>${q.ha}</div>
+        </div>
+      </div>
+      <div class="modal-text">${q.image.replace(/\n/g,'<br>')}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Từ khoá</div>
+      <div class="taga-row">${q.kw.split('·').map(k=>`<span class="tag tag-neutral">${k.trim()}</span>`).join('')}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Tình Cảm & Hôn Nhân</div>
+      <div class="modal-text"><strong style="color:var(--gold-dark)">❤ Tình cảm:</strong> ${q.tinhcam}</div>
+      <div class="modal-text" style="margin-top:0.6rem"><strong style="color:var(--gold-dark)">💍 Hôn nhân:</strong> ${q.honnhan}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Sức Khoẻ & Tài Lộc</div>
+      <div class="modal-text"><strong style="color:var(--gold-dark)">🌿 Sức khoẻ:</strong> ${q.suckhoe}</div>
+      <div class="modal-text" style="margin-top:0.6rem"><strong style="color:var(--gold-dark)">💰 Tài lộc:</strong> ${q.tailoc}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Công Danh & Công Việc</div>
+      <div class="modal-text"><strong style="color:var(--gold-dark)">🏆 Công danh:</strong> ${q.congdanh}</div>
+      <div class="modal-text" style="margin-top:0.6rem"><strong style="color:var(--gold-dark)">💼 Công việc:</strong> ${q.congviec}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Gia Cảnh</div>
+      <div class="modal-text">${q.giacanh}</div>
+    </div>
+    <div class="modal-section">
+      <div class="section-label">Hào Từ – Luận Giải 6 Hào</div>
+      <div class="lines-grid">
+        ${q.haos.map(h=>`<div class="hao-item"><div class="hao-label">${h.ten}</div><div class="hao-text">${h.text}</div></div>`).join('')}
+      </div>
+    </div>
+  `;
+  document.getElementById('btnPrev').disabled = idx === 0;
+  document.getElementById('btnNext').disabled = idx === QUE_DATA.length - 1;
+  document.getElementById('modalBg').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalBg').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function navModal(dir) {
+  const newIdx = currentIdx + dir;
+  if (newIdx >= 0 && newIdx < QUE_DATA.length) openModal(newIdx);
+}
+
+function handleModalBgClick(e) {
+  if (e.target === document.getElementById('modalBg')) closeModal();
+}
+
+// ================================================================
+// EVENTS
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchTerm = e.target.value.toLowerCase().trim();
+  renderGrid();
+});
+
+document.querySelectorAll('.filter-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.filter;
+    renderGrid();
+  });
+});
+
+document.querySelectorAll('.cat-badge').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-badge').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeCat = btn.dataset.cat;
+    renderGrid();
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (document.getElementById('modalBg').classList.contains('open')) {
+    if (e.key === 'ArrowLeft') navModal(-1);
+    if (e.key === 'ArrowRight') navModal(1);
+  }
+});
+
+// Init
+renderGrid();
+</script>
+</body>
+</html>
